@@ -455,6 +455,15 @@ html[data-theme="dark"] .vtick-check { stroke: #18191a; }
 }
 .nav-btn:hover { background: var(--line); }
 .nav-btn.active { color: var(--brand); background: var(--brand-soft); }
+/* Top-bar dark-mode toggle: a pill with an icon + short label (moon "Dark" in light mode,
+   sun "Light mode" in dark mode). On phones the label hides so the top bar stays uncluttered. */
+.nav-btn.theme-btn { width: auto; border-radius: 21px; padding: 0 12px; gap: 6px; font-size: 14px; font-weight: 600; }
+.nav-btn.theme-btn .ti { font-size: 17px; line-height: 1; }
+.nav-btn.theme-btn .tl { line-height: 1; }
+@media (max-width: 640px) {
+  .nav-btn.theme-btn { width: 42px; padding: 0; }
+  .nav-btn.theme-btn .tl { display: none; }
+}
 .badge {
   position: absolute;
   top: -2px;

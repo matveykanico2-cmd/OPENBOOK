@@ -485,6 +485,7 @@
       b.addEventListener('click', () => go(b.getAttribute('data-nav')));
     });
     document.getElementById('notifBtn').addEventListener('click', toggleNotifs);
+    syncThemeBtn(); // the dark-mode toggle now lives on the top bar
 
     const si = document.getElementById('searchInput');
     let to;
@@ -626,19 +627,20 @@
   // top-right; everything else (your profile, Friends, Groups) lives here.
   function renderLeftRail() {
     const rail = document.getElementById('leftRail');
+    // The Admin entry (formerly "Owner dashboard") is for the founder only.
+    const isOwner = (ME.email || '').toLowerCase() === 'nmservicesww@gmail.com';
     rail.innerHTML =
       '<div class="card" style="padding:8px">' +
       '<div class="side-link" data-go="profile">' + avatar(ME, 32) + '<span>' + esc(ME.name) + '</span></div>' +
-      (ME.isAdmin ? '<a class="side-link" href="/admin" style="text-decoration:none"><span class="ic">&#128202;</span><span>Owner dashboard</span></a>' : '') +
+      (isOwner ? '<a class="side-link" href="/admin" style="text-decoration:none"><span class="ic">&#9881;&#65039;</span><span>Admin</span></a>' : '') +
       '<div class="side-link" id="getStartedLink"><span class="ic">&#128640;</span><span>Get started</span></div>' +
       '<div class="side-link" data-go="friends"><span class="ic">&#128101;</span><span>Friends</span><span class="badge side-badge hidden" id="friendsBadge">0</span></div>' +
       '<div class="side-link" data-go="groups"><span class="ic">&#127760;</span><span>Groups</span></div>' +
       '<div class="side-link" data-go="saved"><span class="ic">&#128278;</span><span>Saved</span></div>' +
-      '<div class="side-link" data-go="suggestions"><span class="ic">&#128161;</span><span>Suggestions</span></div>' +
-      '<div class="side-link" data-go="jury"><span class="ic">&#9878;&#65039;</span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
       '<div class="side-link" data-go="invite"><span class="ic">&#127881;</span><span>Invite friends</span></div>' +
+      '<div class="side-link" data-go="jury"><span class="ic">&#9878;&#65039;</span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
+      '<div class="side-link" data-go="suggestions"><span class="ic">&#128161;</span><span>Suggest us</span></div>' +
       '<div class="side-link" data-go="support"><span class="ic">&#10084;&#65039;</span><span>Support OpenBook</span></div>' +
-      '<div class="side-link" id="themeToggle"><span class="ic">' + (currentTheme() === 'dark' ? '&#9728;&#65039;' : '&#127769;') + '</span><span>' + (currentTheme() === 'dark' ? 'Light mode' : 'Dark mode') + '</span></div>' +
       '<div class="side-link" id="leftLogout"><span class="ic">&#128682;</span><span>Log out</span></div>' +
       '</div>' +
       '<nav class="rail-foot">' +
@@ -659,7 +661,6 @@
         else go(n);
       })
     );
-    document.getElementById('themeToggle').addEventListener('click', toggleTheme);
     document.getElementById('leftLogout').addEventListener('click', doLogout);
     const gsl = document.getElementById('getStartedLink');
     if (gsl) gsl.addEventListener('click', openGetStartedGuide);
@@ -759,7 +760,21 @@
   }
   function toggleTheme() {
     setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
-    renderLeftRail(); // refresh the toggle's icon and label
+    syncThemeBtn(); // refresh the top-bar toggle's icon + label
+  }
+  // The dark-mode toggle lives on the top bar now. In light mode it shows a moon + "Dark"
+  // (click to go dark); in dark mode a sun + "Light mode" (click to go light).
+  function syncThemeBtn() {
+    const btn = document.getElementById('themeBtn');
+    if (!btn) return;
+    const dark = currentTheme() === 'dark';
+    const icon = document.getElementById('themeIcon');
+    const label = document.getElementById('themeLabel');
+    if (icon) icon.innerHTML = dark ? '&#9728;&#65039;' : '&#127769;'; // sun in dark mode, moon in light mode
+    if (label) label.textContent = dark ? 'Light mode' : 'Dark';
+    btn.setAttribute('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    if (!btn._wired) { btn._wired = true; btn.addEventListener('click', toggleTheme); }
   }
 
   async function doLogout() {

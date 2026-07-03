@@ -51,6 +51,8 @@ const CHANGELOG = [
     body: 'UPDATE: OpenBook is much easier to find and share now. Every public community has its own shareable page, there is an Explore page and a What is new page anyone can browse, and shared links show a proper preview image. Search engines can now understand and index our public content, so people can discover OpenBook on Google, the honest way. Private posts, private profiles, and private communities stay completely private, as always.' },
   { slug: '2026-07-04-mobile-action-row',
     body: 'FIX: On phones the row of buttons under each post (like, comment, share, save, report) was too cramped. It now shows clean, easy-to-tap icons on small screens, with the text labels still there on bigger screens and a tooltip on each. The share count still shows next to the share icon.' },
+  { slug: '2026-07-04-menu-and-theme',
+    body: 'CHANGE: We tidied the left menu into a clearer order (Get started, Friends, Groups, Saved, Invite friends, Jury duty, Suggest us, Support OpenBook), and moved the light and dark switch up to the top bar as a quick moon or sun button so it is always one tap away. The Suggestions page is now called Suggest us.' },
 ];
 
 async function publishChangelog() {
