@@ -43,6 +43,10 @@ const CHANGELOG = [
     body: 'UPDATE: Five new things to make OpenBook nicer to use. Save any post to a private bookmarks list that only you can see. Repost to share a post with your own followers, with an optional comment. Search across people, communities, and posts from the top bar. Link previews turn a bare link into a titled card. And content warnings let you blur a sensitive post behind a short label, so hard topics can exist without being forced on anyone. None of these touch karma, standing, or reach.' },
   { slug: '2026-07-01-profile-actions-layout',
     body: 'FIX: On a profile, the action buttons (Message, Friends, Follow, and the rest) now sit in a tidy two-up grid instead of one long row, so the name and stats get their space back and no longer get squeezed. A small polish for a cleaner profile header on desktop and mobile.' },
+  { slug: '2026-07-02-shareable-public',
+    body: 'UPDATE: Your public posts and profile are now shareable to anyone, even people without an account. Share a link and it shows a proper preview, and it opens to the real content with a friendly Join button. Search engines can find public OpenBook content too, so the more we share, the more OpenBook grows the honest way. Friends-only posts and private profiles stay completely private, as always.' },
+  { slug: '2026-07-02-new-here',
+    body: 'UPDATE: A warmer welcome for new members. A fresh account now lands on Invite friends, your Home feed fills up with Discover so it is never empty on day one, and the sign-up page shows how many of the first 5000 founding spots are left. Founders keep the Pioneer badge forever.' },
 ];
 
 async function publishChangelog() {

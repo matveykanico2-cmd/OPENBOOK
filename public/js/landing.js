@@ -27,6 +27,22 @@
     } catch (e) {}
   })();
 
+  // Founding-member scarcity: the first 5000 accounts keep the Pioneer badge forever.
+  // A live, honest count is a free, on-brand nudge to sign up now rather than later.
+  (function foundingSpots() {
+    var box = document.getElementById('foundingSpots');
+    if (!box) return;
+    fetch('/api/community-stats').then(function (r) { return r.json(); }).then(function (s) {
+      if (!s || !s.cap || s.signupsFull) return;
+      var left = Math.max(0, s.cap - (s.users || 0));
+      if (left <= 0) return;
+      var num = (s.users || 0) + 1;
+      box.innerHTML = '&#9873; You would be founding member <b>#' + num + '</b>. Only <b>' + left.toLocaleString() +
+        '</b> of the first ' + s.cap.toLocaleString() + ' founding spots left, and founders keep the Pioneer badge forever.';
+      box.classList.remove('hidden');
+    }).catch(function () {});
+  })();
+
   const loginView = document.getElementById('loginView');
   const signupView = document.getElementById('signupView');
 
@@ -296,7 +312,7 @@
         hp_token: document.getElementById('signupHp').value,
         turnstileToken: captchaToken('signup'),
       }, proof));
-      window.location.replace('/app');
+      window.location.replace('/app?welcome=1'); // land on Invite friends to kick off the growth loop
     } catch (err) {
       captchaReset('signup');
       showAlert(document.getElementById('signupAlert'), err.message);

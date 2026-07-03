@@ -282,8 +282,7 @@
       const r = await API.me();
       ME = r.user;
     } catch (e) {
-      window.location.href = '/';
-      return;
+      return bootPublic(); // logged out: read-only public view on a shared link, else landing
     }
     // Public config (drives the verify banner's deletion warning so it only appears
     // when the server will actually delete, with the real grace window).
@@ -308,12 +307,40 @@
     // Deep links from a shared URL: /u/<username-or-id> opens a profile, /p/<id>
     // opens a post. The clean path is normalised back to /app once handled so the
     // running app's URL stays tidy.
+    // Fresh signup: land on Invite friends (growth loop) instead of an empty feed.
+    if (params.get('welcome') === '1') {
+      window.history.replaceState({}, '', '/app');
+      toast('Welcome to OpenBook! Invite a few friends and your feed comes alive.');
+      return go('invite');
+    }
     const dpath = window.location.pathname;
     const um = /^\/u\/([^\/?#]+)/.exec(dpath);
     const ppm = /^\/p\/(\d+)/.exec(dpath);
     if (um) { go('profile', decodeURIComponent(um[1])); }
     else if (ppm) { go('post', Number(ppm[1])); }
     else go('feed');
+  }
+
+  // Logged-out visitor. On a shareable public link (/p/<id> or /u/<handle>) the server
+  // already rendered the real content into #view; we keep it and just slim the chrome
+  // down to Log in / Sign up plus a Join call to action. Anywhere else (the app itself),
+  // send them to the landing page. No ME-dependent code runs in this path.
+  function bootPublic() {
+    var path = window.location.pathname;
+    if (!/^\/(p|u)\//.test(path)) { window.location.href = '/'; return; }
+    document.body.classList.add('public-mode');
+    var right = document.querySelector('.topbar-right');
+    if (right) right.innerHTML = '<a class="btn btn-sm" href="/">Log in</a> <a class="btn btn-primary btn-sm" href="/">Sign up</a>';
+    var nav = document.querySelector('.nav-primary'); if (nav) nav.style.display = 'none';
+    var search = document.querySelector('.topbar .search'); if (search) search.style.display = 'none';
+    var logo = document.querySelector('.topbar .logo'); if (logo) logo.onclick = function () { window.location.href = '/'; };
+    var bn = document.getElementById('bottomNav'); if (bn) bn.style.display = 'none';
+    var view = document.getElementById('view');
+    if (view && !view.innerHTML.trim()) {
+      view.innerHTML = '<div class="public-shell"><div class="card"><div class="section-title">Not available</div>' +
+        '<div class="pmeta">This content is private or does not exist. OpenBook is a social network where money never buys reach and the community decides what rises.</div>' +
+        '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a></p></div></div>';
+    }
   }
 
   // A dismissable-by-verifying banner shown to accounts that have not confirmed
@@ -886,24 +913,73 @@
     }).catch(() => { box.innerHTML = ''; });
   }
 
+  // A monotonic token so a slow feed load that is still awaiting network cannot append
+  // its (now stale) results after the user has switched tabs and a newer load has run.
+  let feedLoadSeq = 0;
   async function loadFeedPosts() {
     const container = document.getElementById('feedPosts');
     if (!container) return;
+    const myLoad = ++feedLoadSeq;
     container.innerHTML = '<div class="card"><div class="empty">Loading your feed...</div></div>';
     try {
-      if (feedMode === 'latest') {
-        const r = await API.feed();
-        renderPosts(container, r.posts, 'Your feed is quiet for now. Add some friends or write your first post above.');
-      } else if (feedMode === 'discover') {
+      if (feedMode === 'discover') {
         const r = await API.discoverFeed('hot');
+        if (myLoad !== feedLoadSeq) return;
         renderMixedFeed(container, r.posts, 'Nothing to discover yet. Public community posts from across OpenBook will show up here.');
-      } else {
-        const r = await API.homeFeed(feedMode);
-        renderMixedFeed(container, r.posts, 'Nothing ranked yet. Join a community or add some friends to fill your feed.');
+        return;
       }
+      const r = feedMode === 'latest' ? await API.feed() : await API.homeFeed(feedMode);
+      if (myLoad !== feedLoadSeq) return; // a newer load started while we awaited; abandon this one
+      const posts = r.posts || [];
+      container.innerHTML = '';
+      posts.forEach((p) => container.appendChild(p.community_id ? communityPostCard(p) : renderPostNode(p)));
+      // Empty-room fix: a new / low-network member must never hit a dead feed. When
+      // their own feed is sparse, show a one-tap "get started" card and fill the rest
+      // with Discover, so there is always something to read and an obvious next step.
+      if (posts.length < 3) await appendStarterAndDiscover(container, posts.length === 0, myLoad);
     } catch (e) {
-      container.innerHTML = '<div class="card"><div class="empty">' + esc(e.message) + '</div></div>';
+      if (myLoad === feedLoadSeq) container.innerHTML = '<div class="card"><div class="empty">' + esc(e.message) + '</div></div>';
     }
+  }
+
+  // Starter pack for a new/low-network member: follow the official account, join a
+  // couple of active communities, and see what is happening across OpenBook right now.
+  // myLoad ties every append to the load that started it, so a stale load is a no-op.
+  async function appendStarterAndDiscover(container, isEmpty, myLoad) {
+    if (myLoad !== feedLoadSeq) return;
+    const starter = el('<div class="card starter-card"></div>');
+    starter.innerHTML = '<div class="section-title">' + (isEmpty ? '&#128075; Welcome! Let us fill your feed' : 'Fill your feed') + '</div>' +
+      '<div class="pmeta">Follow a few accounts and communities and your Home feed comes alive. Here is what is happening across OpenBook in the meantime.</div>' +
+      '<div class="starter-actions" id="starterActions"></div>';
+    container.appendChild(starter);
+    const acts = starter.querySelector('#starterActions');
+    try {
+      const off = await API.officialAccount();
+      if (off && off.user && !off.isFollowing && !off.isSelf) {
+        const b = el('<button class="btn btn-primary btn-sm">&#43; Follow ' + esc(off.user.name) + '</button>');
+        b.onclick = async () => { try { await API.follow(off.user.id); b.textContent = 'Following ✓'; b.disabled = true; loadFeedPosts(); } catch (e) { toast(e.message); } };
+        acts.appendChild(b);
+      }
+    } catch (e) {}
+    try {
+      const cr = await API.communities();
+      ((cr && cr.discover) || []).slice(0, 3).forEach((c) => {
+        const b = el('<button class="btn btn-sm">&#43; Join o/' + esc(c.name) + '</button>');
+        b.onclick = async () => { try { await API.joinCommunity(c.id); b.textContent = 'Joined ✓'; b.disabled = true; } catch (e) { toast(e.message); } };
+        acts.appendChild(b);
+      });
+    } catch (e) {}
+    if (myLoad !== feedLoadSeq) return; // a newer load took over while we fetched
+    const disc = el('<div class="card"><div class="section-title">&#127760; Discover OpenBook</div><div id="starterDiscover"></div></div>');
+    container.appendChild(disc);
+    const dbox = disc.querySelector('#starterDiscover');
+    try {
+      const r = await API.discoverFeed('hot');
+      if (myLoad !== feedLoadSeq) return;
+      const dp = (r.posts || []).slice(0, 15);
+      if (!dp.length) { dbox.innerHTML = '<div class="empty">New public posts will show up here as people post.</div>'; return; }
+      dp.forEach((p) => dbox.appendChild(p.community_id ? communityPostCard(p) : renderPostNode(p)));
+    } catch (e) { dbox.innerHTML = ''; }
   }
 
   // The combined feed mixes plain Facebook-style posts with community posts, so

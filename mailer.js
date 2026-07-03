@@ -154,8 +154,26 @@ async function sendSupporterThankYouEmail(to, name, d) {
   }
 }
 
+// Generic transactional send (subject + prebuilt HTML). Used by the weekly digest.
+// Same safe behaviour as the others: a no-op that logs when RESEND_API_KEY is unset.
+async function send(to, subject, html) {
+  if (!RESEND_API_KEY) {
+    console.log('[mailer] RESEND_API_KEY not set. Would send "' + subject + '" to ' + to);
+    return { sent: false };
+  }
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: EMAIL_FROM, to: [to], subject, html }),
+    });
+    if (!res.ok) { console.error('[mailer] Resend returned ' + res.status); return { sent: false }; }
+    return { sent: true };
+  } catch (e) { console.error('[mailer] send failed: ' + (e && e.message)); return { sent: false }; }
+}
+
 // True when real sending is configured (used to decide whether to surface the
 // dev link in API responses).
 const EMAIL_CONFIGURED = !!RESEND_API_KEY;
 
-module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendSupporterThankYouEmail, EMAIL_CONFIGURED };
+module.exports = { sendVerificationEmail, sendPasswordResetEmail, sendSupporterThankYouEmail, send, escapeHtml, EMAIL_CONFIGURED };

@@ -137,14 +137,32 @@ const ASSET_V = (function () {
   } catch (e) { return 'dev'; }
 })();
 const _pageCache = new Map();
-function sendPage(res, file) {
+function stampedPage(file) {
   let html = _pageCache.get(file);
   if (html === undefined) {
     try { html = fs.readFileSync(file, 'utf8').replace(/((?:src|href)=")(\/(?:js|css)\/[^"?]+)(")/g, '$1$2?v=' + ASSET_V + '$3'); }
     catch (e) { html = null; }
     _pageCache.set(file, html);
   }
+  return html;
+}
+function sendPage(res, file) {
+  const html = stampedPage(file);
   if (html == null) return res.status(404).end();
+  res.type('html').send(html);
+}
+// Serve the app shell with per-request Open Graph meta + a server-rendered content
+// block injected, so a link scraper (X / WhatsApp / Google) sees a rich preview and
+// the real content without running JS. Never cached (it varies per post/profile). The
+// injected parts are meta tags + escaped markup only, so the CSP script hashes are
+// untouched. Falls back to the plain shell when there is nothing public to show.
+function sendPublicPage(res, file, opts) {
+  let html = stampedPage(file);
+  if (html == null) return res.status(404).end();
+  opts = opts || {};
+  if (opts.title) html = html.replace('<title>OpenBook</title>', '<title>' + require('./publicview').esc(opts.title) + '</title>');
+  if (opts.og) html = html.replace('</head>', '    ' + opts.og + '\n  </head>');
+  if (opts.prerender) html = html.replace('<main class="center" id="view"></main>', '<main class="center" id="view">' + opts.prerender + '</main>');
   res.type('html').send(html);
 }
 
@@ -227,6 +245,18 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
   message: { error: 'Too many attempts. Please wait a few minutes and try again.' },
+});
+
+// A per-IP read limiter for the UNAUTHENTICATED public surface (/api/public, the
+// server-rendered /p and /u pages, and /sitemap.xml). Generous for real browsing and
+// crawlers, low enough to blunt a scripted flood against the single instance. Trust
+// proxy is set (below), so this sees the real client IP behind Cloudflare/Render.
+const publicReadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: Number(process.env.PUBLIC_READ_MAX) > 0 ? Number(process.env.PUBLIC_READ_MAX) : 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' },
 });
 
 // CSRF defense-in-depth: reject state-changing API calls whose Origin (or Referer
@@ -350,6 +380,8 @@ app.use('/api/posts', require('./routes/posts'));
 app.use('/api/saves', require('./routes/saves'));
 app.use('/api/shares', require('./routes/shares'));
 app.use('/api/search', require('./routes/search'));
+app.use('/api/public', publicReadLimiter, require('./routes/public')); // no-auth read of world-visible content
+app.use('/api/digest', require('./routes/digest')); // one-click email unsubscribe (token-verified)
 app.use('/api/comments', require('./routes/comments'));
 app.use('/api/friends', require('./routes/friends'));
 app.use('/api/notifications', require('./routes/notifications'));
@@ -378,10 +410,107 @@ app.use('/api/billing', require('./routes/billing').api);
 // The authenticated single page app shell.
 app.get('/app', (req, res) => sendPage(res, path.join(__dirname, 'public', 'app.html')));
 
-// Clean, shareable links: /u/<username-or-id> opens a profile, /p/<id> opens a
-// post. Both serve the app shell; the client reads the path and navigates there.
-app.get('/u/:handle', (req, res) => sendPage(res, path.join(__dirname, 'public', 'app.html')));
-app.get('/p/:id', (req, res) => sendPage(res, path.join(__dirname, 'public', 'app.html')));
+// Clean, shareable links: /u/<username-or-id> opens a profile, /p/<id> opens a post.
+// For PUBLIC content these render server-side Open Graph tags + a real content block,
+// so a shared link shows a rich preview and Google can index it. The client reads the
+// path and takes over (logged in: full app; logged out: read-only view + Join CTA).
+const APP_HTML = path.join(__dirname, 'public', 'app.html');
+const pubview = require('./publicview');
+function reqBase(req) { return (process.env.APP_BASE_URL || ('https://' + req.headers.host)).replace(/\/$/, ''); }
+
+// A native-looking, escaped content block for a public post (SEO + no-JS + the
+// logged-out read-only body). Uses the app's real CSS classes so it looks like OpenBook.
+function publicPostPrerender(post, base) {
+  const e = pubview.esc;
+  const a = post.author || {};
+  const body = post.title
+    ? '<h1 class="pp-title">' + e(post.title) + '</h1>' + (post.content ? '<div class="post-body">' + e(post.content) + '</div>' : '')
+    : '<div class="post-body">' + e(post.content || '') + '</div>';
+  const img = post.image ? '<div class="post-image"><img src="' + e(post.image) + '" alt="" loading="lazy"></div>' : '';
+  const comments = (post.comments || []).slice(0, 20).map((c) =>
+    '<div class="pp-comment"><b>' + e(c.author && c.author.name) + '</b> ' + e(c.content) + '</div>').join('');
+  return '<div class="public-shell">' +
+    '<div class="pub-cta"><span><b>OpenBook</b> is a social network where money never buys reach and the community decides. Read freely.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<article class="card post pp-post">' +
+    '<div class="post-head"><div class="meta"><div class="name">' + e(a.name || 'Someone') + '</div>' +
+    (a.username ? '<div class="time">@' + e(a.username) + '</div>' : '') + '</div></div>' +
+    body + img +
+    '<div class="pp-stats">&#9650; ' + (post.score || 0) + ' &#183; ' + (post.commentCount || 0) + ' comments</div>' +
+    '</article>' +
+    (comments ? '<div class="card pp-comments"><div class="section-title">Comments</div>' + comments + '</div>' : '') +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to reply, vote, and post</a> <a class="btn" href="/">Log in</a></div>' +
+    '</div>';
+}
+function publicProfilePrerender(data, base) {
+  const e = pubview.esc; const u = data.user || {};
+  const posts = (data.posts || []).slice(0, 10).map((p) =>
+    '<article class="card post"><div class="post-body">' + e(p.title || p.content || '') + '</div></article>').join('');
+  return '<div class="public-shell">' +
+    '<div class="pub-cta"><span><b>' + e(u.name) + '</b> is on OpenBook, the social network where money never buys reach.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<div class="card"><h1 class="pp-title">' + e(u.name) + '</h1>' +
+    (u.username ? '<div class="time">@' + e(u.username) + '</div>' : '') +
+    (u.bio ? '<div class="profile-bio">' + e(u.bio) + '</div>' : '') +
+    '<div class="pp-stats">' + (data.followersCount || 0) + ' followers &#183; ' + (data.postsCount || 0) + ' public posts</div></div>' +
+    posts +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to follow and message</a></div>' +
+    '</div>';
+}
+
+app.get('/u/:handle', publicReadLimiter, async (req, res) => {
+  try {
+    const data = await pubview.publicProfile(req.params.handle);
+    if (data) {
+      const base = reqBase(req); const u = data.user;
+      const title = u.name + (u.username ? ' (@' + u.username + ')' : '') + ' on OpenBook';
+      const desc = u.bio || (u.name + ' is on OpenBook, the social network where money never buys reach and the community decides.');
+      return sendPublicPage(res, APP_HTML, {
+        title,
+        og: pubview.ogMeta({ title, description: desc, url: base + '/u/' + encodeURIComponent(u.username || u.id), image: pubview.absUrl(base, u.avatar), type: 'profile' }),
+        prerender: publicProfilePrerender(data, base),
+      });
+    }
+  } catch (e) { logger.warn({ err: e }, 'public profile render failed'); }
+  sendPage(res, APP_HTML);
+});
+app.get('/p/:id', publicReadLimiter, async (req, res) => {
+  try {
+    const post = await pubview.publicPost(req.params.id);
+    if (post) {
+      const base = reqBase(req); const a = post.author || {};
+      const title = post.title || ((a.name || 'Someone') + ' on OpenBook');
+      const desc = post.content || post.title || 'Join the conversation on OpenBook.';
+      return sendPublicPage(res, APP_HTML, {
+        title,
+        og: pubview.ogMeta({ title, description: desc, url: base + '/p/' + post.id, image: pubview.absUrl(base, post.image), type: 'article' }),
+        prerender: publicPostPrerender(post, base),
+      });
+    }
+  } catch (e) { logger.warn({ err: e }, 'public post render failed'); }
+  sendPage(res, APP_HTML);
+});
+
+// SEO: let crawlers in, point them at the sitemap, keep the app/admin/API out.
+app.get('/robots.txt', (req, res) => {
+  const base = reqBase(req);
+  res.type('text/plain').send(
+    'User-agent: *\nAllow: /\nDisallow: /app\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ' + base + '/sitemap.xml\n'
+  );
+});
+app.get('/sitemap.xml', publicReadLimiter, async (req, res) => {
+  try {
+    const base = reqBase(req);
+    const { postIds, usernames } = await pubview.sitemapEntries();
+    const urls = [base + '/', base + '/roadmap', base + '/rules', base + '/mission', base + '/privacy']
+      .concat(postIds.map((id) => base + '/p/' + id))
+      .concat(usernames.map((u) => base + '/u/' + encodeURIComponent(u)));
+    res.type('application/xml').send(
+      '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      urls.map((u) => '  <url><loc>' + pubview.esc(u) + '</loc></url>').join('\n') + '\n</urlset>\n'
+    );
+  } catch (e) { res.status(500).end(); }
+});
 
 // Password-reset page (the target of the emailed link; the token is in the URL).
 app.get('/reset', (req, res) => sendPage(res, path.join(__dirname, 'public', 'reset.html')));
@@ -464,6 +593,9 @@ require('./db').init()
       try { require('./roadmap-sync').startRoadmapJobs(); } catch (e) { logger.error({ err: e }, 'failed to start roadmap sync job'); }
       // Jury: settle any community juries past their deadline (Phase 4).
       try { require('./jury').startJuryJobs(); } catch (e) { logger.error({ err: e }, 'failed to start jury job'); }
+      // Weekly retention digest (OFF unless DIGEST_ENABLED=1; only mails members with
+      // something waiting, one per week, with a one-click unsubscribe).
+      try { require('./digest').startDigestJobs(); } catch (e) { logger.error({ err: e }, 'failed to start digest job'); }
     });
   })
   .catch((e) => {

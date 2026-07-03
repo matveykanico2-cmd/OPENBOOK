@@ -373,6 +373,11 @@ db.init = async function init() {
   // A comment can be edited by its author; this flag shows an "edited" mark afterwards.
   await addColumn('comments', 'edited INTEGER NOT NULL DEFAULT 0', 'edited');
   await addColumn('comments', 'edited_at TEXT', 'edited_at');
+  // Weekly email digest: opt-out flag, last-sent stamp, and a stable per-user token
+  // for the one-click email unsubscribe link (survives restarts, unlike a random secret).
+  await addColumn('users', 'email_digest INTEGER NOT NULL DEFAULT 1', 'email_digest');
+  await addColumn('users', 'digest_last_sent TEXT', 'digest_last_sent');
+  await addColumn('users', "digest_token TEXT NOT NULL DEFAULT ''", 'digest_token');
   await db.exec('CREATE INDEX IF NOT EXISTS idx_posts_community ON posts(community_id)');
   await db.exec('CREATE INDEX IF NOT EXISTS idx_comments_parent ON comments(parent_id)');
 
