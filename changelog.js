@@ -47,6 +47,8 @@ const CHANGELOG = [
     body: 'UPDATE: Your public posts and profile are now shareable to anyone, even people without an account. Share a link and it shows a proper preview, and it opens to the real content with a friendly Join button. Search engines can find public OpenBook content too, so the more we share, the more OpenBook grows the honest way. Friends-only posts and private profiles stay completely private, as always.' },
   { slug: '2026-07-02-new-here',
     body: 'UPDATE: A warmer welcome for new members. A fresh account now lands on Invite friends, your Home feed fills up with Discover so it is never empty on day one, and the sign-up page shows how many of the first 5000 founding spots are left. Founders keep the Pioneer badge forever.' },
+  { slug: '2026-07-02-discoverable',
+    body: 'UPDATE: OpenBook is much easier to find and share now. Every public community has its own shareable page, there is an Explore page and a What is new page anyone can browse, and shared links show a proper preview image. Search engines can now understand and index our public content, so people can discover OpenBook on Google, the honest way. Private posts, private profiles, and private communities stay completely private, as always.' },
 ];
 
 async function publishChangelog() {

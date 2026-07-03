@@ -161,7 +161,11 @@ function sendPublicPage(res, file, opts) {
   if (html == null) return res.status(404).end();
   opts = opts || {};
   if (opts.title) html = html.replace('<title>OpenBook</title>', '<title>' + require('./publicview').esc(opts.title) + '</title>');
-  if (opts.og) html = html.replace('</head>', '    ' + opts.og + '\n  </head>');
+  let head = '';
+  if (opts.robots) head += '    <meta name="robots" content="' + opts.robots + '">\n';
+  if (opts.og) head += '    ' + opts.og + '\n';
+  if (opts.jsonLd) head += '    ' + opts.jsonLd + '\n';
+  if (head) html = html.replace('</head>', head + '  </head>');
   if (opts.prerender) html = html.replace('<main class="center" id="view"></main>', '<main class="center" id="view">' + opts.prerender + '</main>');
   res.type('html').send(html);
 }
@@ -418,11 +422,14 @@ const APP_HTML = path.join(__dirname, 'public', 'app.html');
 const pubview = require('./publicview');
 function reqBase(req) { return (process.env.APP_BASE_URL || ('https://' + req.headers.host)).replace(/\/$/, ''); }
 
-// A native-looking, escaped content block for a public post (SEO + no-JS + the
-// logged-out read-only body). Uses the app's real CSS classes so it looks like OpenBook.
+// Native-looking, escaped content blocks for the public pages (SEO + no-JS + the logged-out
+// read-only body). They use the app's real CSS classes AND link to other public content
+// (author profile, community, posts, the /explore hub) so crawlers get a real link graph.
 function publicPostPrerender(post, base) {
   const e = pubview.esc;
   const a = post.author || {};
+  const authorLink = a.username ? '<a href="/u/' + e(a.username) + '">' + e(a.name || 'Someone') + '</a>' : e(a.name || 'Someone');
+  const commLink = post.community && post.community.name ? ' <span class="pp-crumb">in <a href="/c/' + e(post.community.name) + '">o/' + e(post.community.name) + '</a></span>' : '';
   const body = post.title
     ? '<h1 class="pp-title">' + e(post.title) + '</h1>' + (post.content ? '<div class="post-body">' + e(post.content) + '</div>' : '')
     : '<div class="post-body">' + e(post.content || '') + '</div>';
@@ -433,19 +440,19 @@ function publicPostPrerender(post, base) {
     '<div class="pub-cta"><span><b>OpenBook</b> is a social network where money never buys reach and the community decides. Read freely.</span>' +
     '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
     '<article class="card post pp-post">' +
-    '<div class="post-head"><div class="meta"><div class="name">' + e(a.name || 'Someone') + '</div>' +
+    '<div class="post-head"><div class="meta"><div class="name">' + authorLink + commLink + '</div>' +
     (a.username ? '<div class="time">@' + e(a.username) + '</div>' : '') + '</div></div>' +
     body + img +
     '<div class="pp-stats">&#9650; ' + (post.score || 0) + ' &#183; ' + (post.commentCount || 0) + ' comments</div>' +
     '</article>' +
     (comments ? '<div class="card pp-comments"><div class="section-title">Comments</div>' + comments + '</div>' : '') +
-    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to reply, vote, and post</a> <a class="btn" href="/">Log in</a></div>' +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to reply, vote, and post</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
     '</div>';
 }
 function publicProfilePrerender(data, base) {
   const e = pubview.esc; const u = data.user || {};
   const posts = (data.posts || []).slice(0, 10).map((p) =>
-    '<article class="card post"><div class="post-body">' + e(p.title || p.content || '') + '</div></article>').join('');
+    '<a class="card post pp-linkcard" href="/p/' + p.id + '"><div class="post-body">' + e(p.title || p.content || '(view post)') + '</div></a>').join('');
   return '<div class="public-shell">' +
     '<div class="pub-cta"><span><b>' + e(u.name) + '</b> is on OpenBook, the social network where money never buys reach.</span>' +
     '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
@@ -454,8 +461,57 @@ function publicProfilePrerender(data, base) {
     (u.bio ? '<div class="profile-bio">' + e(u.bio) + '</div>' : '') +
     '<div class="pp-stats">' + (data.followersCount || 0) + ' followers &#183; ' + (data.postsCount || 0) + ' public posts</div></div>' +
     posts +
-    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to follow and message</a></div>' +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to follow and message</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
     '</div>';
+}
+function publicCommunityPrerender(data, base) {
+  const e = pubview.esc; const c = data.community || {};
+  const posts = (data.posts || []).slice(0, 20).map((p) => {
+    const a = p.author || {};
+    return '<a class="card post pp-linkcard" href="/p/' + p.id + '"><div class="post-body">' + e(p.title || p.content || '(view post)') + '</div>' +
+      (a.name ? '<div class="time">by ' + e(a.name) + '</div>' : '') + '</a>';
+  }).join('') || '<div class="card"><div class="empty">No public posts here yet.</div></div>';
+  return '<div class="public-shell">' +
+    '<div class="pub-cta"><span>o/<b>' + e(c.name) + '</b> on OpenBook, where money never buys reach and the community decides.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<div class="card"><h1 class="pp-title">o/' + e(c.name) + '</h1>' +
+    (c.description ? '<div class="profile-bio">' + e(c.description) + '</div>' : '') +
+    '<div class="pp-stats">' + (data.memberCount || 0) + ' members &#183; ' + (data.posts || []).length + ' recent posts</div></div>' +
+    posts +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join o/' + e(c.name) + '</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
+    '</div>';
+}
+function explorePrerender(posts, communities, usernames, base) {
+  const e = pubview.esc;
+  const postList = posts.slice(0, 40).map((p) => '<li><a href="/p/' + p.id + '">' + e(String(p.title || p.content || 'A post on OpenBook').slice(0, 90)) + '</a></li>').join('');
+  const commList = communities.slice(0, 50).map((c) => '<li><a href="/c/' + e(c.name) + '">o/' + e(c.name) + '</a>' + (c.description ? ' <span class="muted">' + e(String(c.description).slice(0, 60)) + '</span>' : '') + '</li>').join('');
+  const peopleList = usernames.slice(0, 60).map((u) => '<li><a href="/u/' + e(u) + '">@' + e(u) + '</a></li>').join('');
+  return '<div class="public-shell explore">' +
+    '<div class="card"><h1 class="pp-title">Explore OpenBook</h1>' +
+    '<div class="profile-bio">A social network where money never buys reach, your data is never sold, and the community decides what rises. Browse public posts, communities, and people below, then join in.</div>' +
+    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a></p></div>' +
+    (commList ? '<div class="card"><h2 class="section-title">Communities</h2><ul class="explore-list">' + commList + '</ul></div>' : '') +
+    (postList ? '<div class="card"><h2 class="section-title">Recent public posts</h2><ul class="explore-list">' + postList + '</ul></div>' : '') +
+    (peopleList ? '<div class="card"><h2 class="section-title">People</h2><ul class="explore-list">' + peopleList + '</ul></div>' : '') +
+    '<div class="pub-foot"><a class="btn" href="/mission">Our mission</a> <a class="btn" href="/rules">Rules</a> <a class="btn" href="/roadmap">Roadmap</a> <a class="btn" href="/updates">What is new</a></div>' +
+    '</div>';
+}
+function updatesPrerender(base) {
+  const e = pubview.esc;
+  const { CHANGELOG } = require('./changelog');
+  const items = CHANGELOG.slice().reverse().map((c) => {
+    const dm = /^(\d{4}-\d{2}-\d{2})/.exec(c.slug);
+    const clean = String(c.body || '').replace(/^(FIX|UPDATE|CHANGE):\s*/i, '');
+    const head = clean.split(/\.\s/)[0].slice(0, 90);
+    return '<article class="card upd-item"><h2 class="section-title">' + e(head) + '</h2>' +
+      (dm ? '<div class="time">' + e(dm[1]) + '</div>' : '') +
+      '<div class="post-body">' + e(clean) + '</div></article>';
+  }).join('');
+  return '<div class="public-shell">' +
+    '<div class="card"><h1 class="pp-title">What is new on OpenBook</h1>' +
+    '<div class="profile-bio">Every change we ship is posted in the open. Here is the running log.</div>' +
+    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a> <a class="btn" href="/explore">Explore</a></p></div>' +
+    items + '</div>';
 }
 
 app.get('/u/:handle', publicReadLimiter, async (req, res) => {
@@ -463,11 +519,14 @@ app.get('/u/:handle', publicReadLimiter, async (req, res) => {
     const data = await pubview.publicProfile(req.params.handle);
     if (data) {
       const base = reqBase(req); const u = data.user;
+      const canonical = base + '/u/' + encodeURIComponent(u.username || u.id);
       const title = u.name + (u.username ? ' (@' + u.username + ')' : '') + ' on OpenBook';
       const desc = u.bio || (u.name + ' is on OpenBook, the social network where money never buys reach and the community decides.');
       return sendPublicPage(res, APP_HTML, {
-        title,
-        og: pubview.ogMeta({ title, description: desc, url: base + '/u/' + encodeURIComponent(u.username || u.id), image: pubview.absUrl(base, u.avatar), type: 'profile' }),
+        title: title + ' | OpenBook',
+        og: pubview.ogMeta({ title, description: desc, url: canonical, canonical, image: pubview.absUrl(base, u.avatar), type: 'profile', base }),
+        jsonLd: pubview.profileJsonLd(data, canonical, base),
+        robots: (data.posts || []).length ? undefined : 'noindex,follow',
         prerender: publicProfilePrerender(data, base),
       });
     }
@@ -479,16 +538,63 @@ app.get('/p/:id', publicReadLimiter, async (req, res) => {
     const post = await pubview.publicPost(req.params.id);
     if (post) {
       const base = reqBase(req); const a = post.author || {};
-      const title = post.title || ((a.name || 'Someone') + ' on OpenBook');
+      const canonical = base + '/p/' + post.id;
+      const snippet = String(post.content || '').replace(/\s+/g, ' ').trim().slice(0, 65);
+      const title = post.title || (snippet ? (snippet + (String(post.content || '').length > 65 ? '...' : '')) : ((a.name || 'Someone') + ' on OpenBook'));
       const desc = post.content || post.title || 'Join the conversation on OpenBook.';
       return sendPublicPage(res, APP_HTML, {
-        title,
-        og: pubview.ogMeta({ title, description: desc, url: base + '/p/' + post.id, image: pubview.absUrl(base, post.image), type: 'article' }),
+        title: title + ' | OpenBook',
+        og: pubview.ogMeta({ title, description: desc, url: canonical, canonical, image: pubview.absUrl(base, post.image), type: 'article', base, published: post.created_at, authorName: a.name }),
+        jsonLd: pubview.postJsonLd(post, canonical, base),
+        robots: pubview.isThinPost(post) ? 'noindex,follow' : undefined,
         prerender: publicPostPrerender(post, base),
       });
     }
   } catch (e) { logger.warn({ err: e }, 'public post render failed'); }
   sendPage(res, APP_HTML);
+});
+app.get('/c/:name', publicReadLimiter, async (req, res) => {
+  try {
+    const data = await pubview.publicCommunity(req.params.name);
+    if (data) {
+      const base = reqBase(req); const c = data.community;
+      const canonical = base + '/c/' + encodeURIComponent(c.name);
+      const title = 'o/' + c.name + (c.description ? ' - ' + c.description : '') + ' | OpenBook';
+      const desc = c.description || ('o/' + c.name + ' on OpenBook, the social network where money never buys reach and the community decides.');
+      return sendPublicPage(res, APP_HTML, {
+        title,
+        og: pubview.ogMeta({ title: 'o/' + c.name, description: desc, url: canonical, canonical, type: 'website', base }),
+        jsonLd: pubview.communityJsonLd(data, canonical),
+        robots: (data.posts || []).length ? undefined : 'noindex,follow',
+        prerender: publicCommunityPrerender(data, base),
+      });
+    }
+  } catch (e) { logger.warn({ err: e }, 'public community render failed'); }
+  sendPage(res, APP_HTML);
+});
+// A crawlable hub: real <a href> links to public posts, communities, and people, so
+// Googlebot has an actual link graph, not just the sitemap.
+app.get('/explore', publicReadLimiter, async (req, res) => {
+  try {
+    const base = reqBase(req);
+    const [posts, communities, sm] = await Promise.all([pubview.publicDiscover(40), pubview.publicCommunities(50), pubview.sitemapEntries()]);
+    const canonical = base + '/explore';
+    return sendPublicPage(res, APP_HTML, {
+      title: 'Explore OpenBook | public posts, communities, and people',
+      og: pubview.ogMeta({ title: 'Explore OpenBook', description: 'Browse public posts, communities, and people on OpenBook, the social network where money never buys reach and the community decides.', url: canonical, canonical, type: 'website', base }),
+      prerender: explorePrerender(posts, communities, sm.usernames || [], base),
+    });
+  } catch (e) { logger.warn({ err: e }, 'explore render failed'); sendPage(res, APP_HTML); }
+});
+// A crawlable, dated log of every shipped change (fresh, keyword-rich, evergreen content).
+app.get('/updates', publicReadLimiter, (req, res) => {
+  const base = reqBase(req);
+  const canonical = base + '/updates';
+  sendPublicPage(res, APP_HTML, {
+    title: 'What is new on OpenBook | product updates',
+    og: pubview.ogMeta({ title: 'What is new on OpenBook', description: 'Every change OpenBook ships, in the open: new features, fixes, and improvements to the social network where money never buys reach.', url: canonical, canonical, type: 'website', base }),
+    prerender: updatesPrerender(base),
+  });
 });
 
 // SEO: let crawlers in, point them at the sitemap, keep the app/admin/API out.
@@ -501,13 +607,15 @@ app.get('/robots.txt', (req, res) => {
 app.get('/sitemap.xml', publicReadLimiter, async (req, res) => {
   try {
     const base = reqBase(req);
-    const { postIds, usernames } = await pubview.sitemapEntries();
-    const urls = [base + '/', base + '/roadmap', base + '/rules', base + '/mission', base + '/privacy']
-      .concat(postIds.map((id) => base + '/p/' + id))
-      .concat(usernames.map((u) => base + '/u/' + encodeURIComponent(u)));
+    const { posts, usernames, communities } = await pubview.sitemapEntries();
+    const stat = ['/', '/explore', '/updates', '/roadmap', '/rules', '/mission', '/privacy', '/terms', '/cookies', '/mod-log'];
+    const rows = stat.map((p) => ({ loc: base + p, lastmod: '' }))
+      .concat((communities || []).map((c) => ({ loc: base + '/c/' + encodeURIComponent(c.name), lastmod: c.lastmod })))
+      .concat((posts || []).map((p) => ({ loc: base + '/p/' + p.id, lastmod: p.lastmod })))
+      .concat((usernames || []).map((u) => ({ loc: base + '/u/' + encodeURIComponent(u), lastmod: '' })));
     res.type('application/xml').send(
       '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
-      urls.map((u) => '  <url><loc>' + pubview.esc(u) + '</loc></url>').join('\n') + '\n</urlset>\n'
+      rows.map((r) => '  <url><loc>' + pubview.esc(r.loc) + '</loc>' + (r.lastmod ? '<lastmod>' + pubview.esc(r.lastmod) + '</lastmod>' : '') + '</url>').join('\n') + '\n</urlset>\n'
     );
   } catch (e) { res.status(500).end(); }
 });

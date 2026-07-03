@@ -313,6 +313,12 @@
       toast('Welcome to OpenBook! Invite a few friends and your feed comes alive.');
       return go('invite');
     }
+    // Sitelinks searchbox target (WebSite SearchAction): /app?q=term opens search.
+    if (params.get('q')) {
+      const q = params.get('q');
+      window.history.replaceState({}, '', '/app');
+      return go('search', q);
+    }
     const dpath = window.location.pathname;
     const um = /^\/u\/([^\/?#]+)/.exec(dpath);
     const ppm = /^\/p\/(\d+)/.exec(dpath);
@@ -327,7 +333,7 @@
   // send them to the landing page. No ME-dependent code runs in this path.
   function bootPublic() {
     var path = window.location.pathname;
-    if (!/^\/(p|u)\//.test(path)) { window.location.href = '/'; return; }
+    if (!/^\/(p|u|c)\//.test(path) && path !== '/explore' && path !== '/updates') { window.location.href = '/'; return; }
     document.body.classList.add('public-mode');
     var right = document.querySelector('.topbar-right');
     if (right) right.innerHTML = '<a class="btn btn-sm" href="/">Log in</a> <a class="btn btn-primary btn-sm" href="/">Sign up</a>';
