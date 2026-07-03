@@ -797,6 +797,14 @@ html[data-theme="dark"] .vtick-check { stroke: #18191a; }
 }
 .post-action:hover { background: var(--hover); }
 .post-action.liked { color: var(--like); }
+/* On phones the action row's text labels crowd the icons together, so hide the labels
+   and keep just the icons (each button keeps a title tooltip, and the Share count stays).
+   Like / comment / share / save / report icons + the vote arrows are self-explanatory. */
+@media (max-width: 640px) {
+  .post-actions .al { display: none; }
+  .votebox.inline .vlabel { display: none; }
+  .post-actions .post-action { gap: 0; padding-left: 4px; padding-right: 4px; font-size: 17px; }
+}
 .menu-btn { background: transparent; border: none; color: var(--text-soft); font-size: 20px; width: 34px; height: 34px; border-radius: 50%; }
 .menu-btn:hover { background: var(--hover); }
 

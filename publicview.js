@@ -123,8 +123,14 @@ async function sitemapEntries() {
     "AND (p.image != '' OR length(trim(coalesce(p.title,'') || ' ' || coalesce(p.content,''))) >= 80) " +
     "ORDER BY p.created_at DESC LIMIT 1000"
   ).all();
+  // Only PUBLIC profiles that have actually authored public content: an empty profile is
+  // thin (and already served noindex), so it should not be advertised in the sitemap.
   const users = await db.prepare(
-    "SELECT username FROM users WHERE (profile_visibility IS NULL OR profile_visibility = 'public') AND username IS NOT NULL AND username != '' LIMIT 1000"
+    "SELECT DISTINCT u.username FROM users u JOIN posts p ON p.user_id = u.id LEFT JOIN communities c ON c.id = p.community_id " +
+    "WHERE (u.profile_visibility IS NULL OR u.profile_visibility = 'public') AND u.username IS NOT NULL AND u.username != '' " +
+    "AND p.visibility = 'visible' AND p.group_id IS NULL AND p.announcement = 0 " +
+    "AND ((p.community_id IS NULL AND p.audience = 'public') OR (p.community_id IS NOT NULL AND c.privacy = 'public')) " +
+    "LIMIT 1000"
   ).all();
   const communities = await db.prepare("SELECT name, created_at FROM communities WHERE privacy = 'public' ORDER BY created_at DESC LIMIT 1000").all();
   return {

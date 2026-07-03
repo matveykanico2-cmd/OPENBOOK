@@ -1978,7 +1978,7 @@
     function paint() {
       const r = mine ? REACTION_MAP[mine] : null;
       if (opts.small) btn.innerHTML = r ? '<span class="rx-mine">' + r.label + '</span>' : 'Like';
-      else btn.innerHTML = r ? (r.emoji + ' <span class="rx-mine">' + r.label + '</span>') : '👍 Like';
+      else btn.innerHTML = r ? (r.emoji + ' <span class="al rx-mine">' + r.label + '</span>') : '👍 <span class="al">Like</span>';
       btn.classList.toggle('reacted', !!mine);
     }
     function closePicker() {
@@ -2100,10 +2100,10 @@
       '<div class="post-actions">' +
       '<span data-vote></span>' +
       '<span data-react></span>' +
-      '<button class="post-action" data-comment="' + p.id + '">&#128172; Comment</button>' +
-      '<button class="post-action" data-share="' + p.id + '" title="Share / repost">&#128257; Share' + (p.shareCount ? ' &#183; ' + p.shareCount : '') + '</button>' +
-      '<button class="post-action' + (p.saved ? ' on' : '') + '" data-save="' + p.id + '" title="Save post">&#128278; ' + (p.saved ? 'Saved' : 'Save') + '</button>' +
-      (mineP ? '' : '<button class="post-action" data-report="post" data-report-id="' + p.id + '">&#9873; Report</button>') +
+      '<button class="post-action" data-comment="' + p.id + '" title="Comment">&#128172; <span class="al">Comment</span></button>' +
+      '<button class="post-action" data-share="' + p.id + '" title="Share / repost">&#128257; <span class="al">Share</span>' + (p.shareCount ? ' ' + p.shareCount : '') + '</button>' +
+      '<button class="post-action' + (p.saved ? ' on' : '') + '" data-save="' + p.id + '" title="Save post">&#128278; <span class="al">' + (p.saved ? 'Saved' : 'Save') + '</span></button>' +
+      (mineP ? '' : '<button class="post-action" data-report="post" data-report-id="' + p.id + '" title="Report">&#9873; <span class="al">Report</span></button>') +
       '</div>' +
       '<div class="comments hidden" data-comments="' + p.id + '"></div>';
     const voteSlot = node.querySelector('[data-vote]');
