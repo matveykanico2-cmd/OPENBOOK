@@ -998,6 +998,26 @@ db.init = async function init() {
   // Who may send you a @mention notification: 'all' (default), 'friends', or 'none'.
   await addColumn('users', "mention_pref TEXT NOT NULL DEFAULT 'all'", 'mention_pref');
 
+  // --- Web Push subscriptions (see push.js) ---
+  // One row per browser/device a user has opted into notifications on. endpoint is
+  // globally unique per browser install, so re-subscribing the same browser updates
+  // its row (ON CONFLICT) instead of duplicating. p256dh + auth are the browser's
+  // public encryption keys the push service needs; they are not secrets of ours.
+  // Rows are pruned automatically when the push service reports the endpoint is gone.
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS push_subscriptions (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id    INTEGER NOT NULL,
+      endpoint   TEXT    NOT NULL UNIQUE,
+      p256dh     TEXT    NOT NULL,
+      auth       TEXT    NOT NULL,
+      ua         TEXT    NOT NULL DEFAULT '',
+      created_at TEXT    NOT NULL DEFAULT (datetime('now')),
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS idx_push_subs_user ON push_subscriptions(user_id);
+  `);
+
   // --- Illegal-content blocklist (SPEC 12): SHA-256 hashes of media confirmed
   // illegal. Every upload is checked against this BEFORE it is stored, and the
   // list grows when a platform admin confirms an 'illegal' report. algo lets a

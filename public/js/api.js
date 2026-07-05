@@ -185,6 +185,11 @@ const API = {
   unreadMessages() { return this.get('/api/messages/unread-count'); },
   history(userId) { return this.get('/api/messages/' + userId); },
 
+  // Web Push: fetch the public VAPID key, register or forget this browser's subscription.
+  pushVapid() { return this.get('/api/push/vapid'); },
+  pushSubscribe(subscription) { return this.post('/api/push/subscribe', { subscription: subscription }); },
+  pushUnsubscribe(endpoint) { return this.post('/api/push/unsubscribe', { endpoint: endpoint }); },
+
   // Marketplace
   listings(q, category, filters) {
     const params = [];

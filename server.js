@@ -336,14 +336,17 @@ app.get('/api/config', (req, res) => {
   } catch (e) { /* leave defaults */ }
   let googleEnabled = false;
   let webauthnEnabled = false;
+  let pushEnabled = false;
   try { googleEnabled = !!require('./routes/auth').GOOGLE_ENABLED; } catch (e) {}
   try { webauthnEnabled = !!require('./routes/auth').WEBAUTHN_ENABLED; } catch (e) {}
+  try { pushEnabled = !!require('./push').ENABLED; } catch (e) {}
   res.json({
     turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || '',
     unverifiedDeletes: unverifiedDeletes,
     unverifiedGraceHours: unverifiedGraceHours,
     googleEnabled: googleEnabled,
     webauthnEnabled: webauthnEnabled,
+    pushEnabled: pushEnabled,
   });
 });
 
@@ -391,6 +394,7 @@ app.use('/api/friends', require('./routes/friends'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/stories', require('./routes/stories'));
 app.use('/api/messages', require('./routes/messages'));
+app.use('/api/push', require('./routes/push')); // Web Push subscribe/unsubscribe + VAPID public key
 app.use('/api/marketplace', require('./routes/marketplace'));
 app.use('/api/escrow', require('./routes/escrow'));
 app.use('/api/groups', require('./routes/groups'));

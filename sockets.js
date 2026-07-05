@@ -10,6 +10,7 @@ const cookie = require('cookie');
 const db = require('./db');
 const { userFromToken, COOKIE_NAME } = require('./auth');
 const presence = require('./presence');
+const push = require('./push');
 
 // Cap on a single message's length, applied to both sending and editing so an
 // edited message cannot balloon past what could be sent in the first place.
@@ -77,7 +78,7 @@ function initSockets(io) {
           return;
         }
         // Soft email gate also applies to chat (re-checked live, not at connect).
-        const sender = await db.prepare('SELECT email_verified FROM users WHERE id = ?').get(user.id);
+        const sender = await db.prepare('SELECT name, email_verified FROM users WHERE id = ?').get(user.id);
         if (!sender || !sender.email_verified) {
           if (typeof ack === 'function') ack({ error: 'Verify your email to send messages.' });
           return;
@@ -110,6 +111,15 @@ function initSockets(io) {
         io.to('user:' + to).emit('message:new', { ...base, mine: false });
         socket.emit('message:new', { ...base, mine: true });
         if (typeof ack === 'function') ack({ ok: true, message: { ...base, mine: true } });
+
+        // If the recipient has no live socket (OpenBook is closed or backgrounded on
+        // their phone), send a Web Push so they get a system notification with sound
+        // and a red count on the app icon. When they ARE online the live event above
+        // already delivered it (and the in-app chime played), so we skip the push to
+        // avoid a double alert. Fire and forget: a push hiccup never affects sending.
+        if (!presence.isOnline(to)) {
+          push.notifyNewMessage(to, user.id, sender.name, content).catch(() => {});
+        }
       } catch (e) {
         // A failed send must never crash the server for every other user.
         console.error('[socket message:send]', e.message);

@@ -53,6 +53,8 @@ const CHANGELOG = [
     body: 'FIX: On phones the row of buttons under each post (like, comment, share, save, report) was too cramped. It now shows clean, easy-to-tap icons on small screens, with the text labels still there on bigger screens and a tooltip on each. The share count still shows next to the share icon.' },
   { slug: '2026-07-04-menu-and-theme',
     body: 'CHANGE: We tidied the left menu into a clearer order (Get started, Friends, Groups, Saved, Invite friends, Jury duty, Suggest us, Support OpenBook), and moved the light and dark switch up to the top bar as a quick moon or sun button so it is always one tap away. The Suggestions page is now called Suggest us.' },
+  { slug: '2026-07-05-message-notifications',
+    body: 'UPDATE: You can now be notified about new messages. Turn on notifications in Settings and a new direct message reaches you with a sound and a red count on the OpenBook app icon, even when OpenBook is closed. It works best on your phone once you add OpenBook to your home screen. It is fully your choice: opt in per device, turn it off any time, and like everything here it never touches anyone karma, standing, or reach.' },
 ];
 
 async function publishChangelog() {

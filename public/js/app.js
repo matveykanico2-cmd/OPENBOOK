@@ -291,6 +291,7 @@
     setupChrome();
     wireSocket();
     refreshBadges();
+    ensurePushSubscribed(); // silently refresh this device's push subscription if already opted in
 
     // Verification feedback from the email link (/app?verified=1).
     const params = new URLSearchParams(window.location.search);
@@ -471,6 +472,89 @@
       '<li>Scroll down and tap <b>Add to Home Screen</b>.</li>' +
       '<li>Tap <b>Add</b>, and OpenBook appears as an app on your phone.</li>' +
       '</ol></div>');
+  }
+
+  /* ===================== web push (DM notifications) ===================== */
+  // Delivers a system notification (with the phone's own sound) and a red count on
+  // the app icon when a new DM arrives while OpenBook is closed or backgrounded. Only
+  // offered when the server has push enabled (VAPID keys set: CONFIG.pushEnabled) and
+  // the browser supports it. We never prompt on our own: the Settings toggle asks on
+  // a real tap; ensurePushSubscribed only refreshes an ALREADY-granted subscription.
+  function pushSupported() {
+    return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  }
+  function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = atob(base64);
+    const arr = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+    return arr;
+  }
+  async function pushRegistration() {
+    if (!pushSupported()) return null;
+    try { return await navigator.serviceWorker.ready; } catch (e) { return null; }
+  }
+  // True if an existing subscription was created with the current server VAPID key.
+  // If the browser does not expose the stored key we assume a match (to avoid needless
+  // churn); we only force a re-subscribe when we can positively see a mismatch.
+  function subMatchesKey(sub, keyB64) {
+    try {
+      const cur = sub.options && sub.options.applicationServerKey;
+      if (!cur) return true;
+      const a = new Uint8Array(cur), b = urlBase64ToUint8Array(keyB64);
+      if (a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+      return true;
+    } catch (e) { return true; }
+  }
+  // Create (or reuse) this browser's subscription and register it with the server. If
+  // an existing subscription was made with an OLD VAPID key (the operator rotated the
+  // keys), drop it and subscribe again, so we never keep a subscription the push
+  // service would reject.
+  async function subscribeAndSave() {
+    const reg = await pushRegistration();
+    if (!reg) return false;
+    const v = await API.pushVapid();
+    if (!v.enabled || !v.key) return false;
+    let sub = await reg.pushManager.getSubscription();
+    if (sub && !subMatchesKey(sub, v.key)) { try { await sub.unsubscribe(); } catch (e) {} sub = null; }
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(v.key) });
+    }
+    await API.pushSubscribe(sub.toJSON());
+    return true;
+  }
+  // Idempotent, silent: refresh the server's copy of this browser's subscription, but
+  // ONLY when permission was already granted. Does nothing (and never prompts) if the
+  // user has not opted in. Safe to call on every boot.
+  async function ensurePushSubscribed() {
+    if (!(CONFIG && CONFIG.pushEnabled) || !pushSupported()) return;
+    if (Notification.permission !== 'granted') return;
+    try { await subscribeAndSave(); } catch (e) { /* app still works without push */ }
+  }
+  // Turn notifications ON from a user gesture (Settings): ask permission if needed,
+  // then subscribe. Returns a small status object the UI turns into a message.
+  async function enablePushNotifications() {
+    if (!(CONFIG && CONFIG.pushEnabled)) return { ok: false, reason: 'disabled' };
+    if (!pushSupported()) return { ok: false, reason: 'unsupported' };
+    let perm = Notification.permission;
+    if (perm === 'default') { try { perm = await Notification.requestPermission(); } catch (e) { perm = Notification.permission; } }
+    if (perm !== 'granted') return { ok: false, reason: perm === 'denied' ? 'denied' : 'dismissed' };
+    try { return (await subscribeAndSave()) ? { ok: true } : { ok: false, reason: 'disabled' }; }
+    catch (e) { return { ok: false, reason: 'error' }; }
+  }
+  // Turn notifications OFF on this device: drop the subscription here and on the server.
+  async function disablePushNotifications() {
+    try {
+      const reg = await pushRegistration();
+      if (!reg) return;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        try { await API.pushUnsubscribe(sub.endpoint); } catch (e) {}
+        try { await sub.unsubscribe(); } catch (e) {}
+      }
+    } catch (e) {}
   }
 
   /* ============================ chrome / nav ============================ */
@@ -841,9 +925,22 @@
     document.title = count > 0 ? '(' + (count > 99 ? '99+' : count) + ') OpenBook' : 'OpenBook';
   }
 
+  // The red count on the installed app icon (home screen / dock / taskbar). Driven
+  // by unread DMs so it matches the notification badge people expect. Only supported
+  // browsers / installed PWAs have the Badging API; elsewhere this is a harmless no-op.
+  function setAppBadgeCount(count) {
+    try {
+      if ('setAppBadge' in navigator) {
+        if (count && count > 0) navigator.setAppBadge(count);
+        else if ('clearAppBadge' in navigator) navigator.clearAppBadge();
+      }
+    } catch (e) { /* Badging API unavailable; ignore */ }
+  }
+
   function setBadge(id, count) {
-    // The messages badge also drives the blinking favicon dot + the tab-title count.
-    if (id === 'messagesBadge') { setMessageFavicon(count > 0); setMessageTitle(count || 0); }
+    // The messages badge also drives the blinking favicon dot, the tab-title count,
+    // and the red count on the installed app icon.
+    if (id === 'messagesBadge') { setMessageFavicon(count > 0); setMessageTitle(count || 0); setAppBadgeCount(count || 0); }
     const b = document.getElementById(id);
     if (!b) return;
     if (count && count > 0) {
@@ -3048,6 +3145,7 @@
   function openEditProfile() {
     const googleOn = !!(CONFIG && CONFIG.googleEnabled);
     const passkeyOn = !!(CONFIG && CONFIG.webauthnEnabled) && window.OBPasskey && OBPasskey.supported();
+    const pushOn = !!(CONFIG && CONFIG.pushEnabled);
     const m = modal(
       '<div class="mh"><h3>Edit profile</h3></div><div class="mc">' +
       '<div class="field"><label>Name</label><input class="input" id="epName" value="' + esc(ME.name) + '">' +
@@ -3100,6 +3198,14 @@
       '<div class="shint" style="font-size:12px;margin:12px 0 6px">Muted accounts</div>' +
       '<div id="epMutedList" class="rel-list"><div class="shint" style="font-size:12px">Loading...</div></div>' +
       '</div>' +
+      (pushOn ?
+        ('<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
+         '<div class="shint" style="font-size:12px;margin-bottom:8px">Notifications</div>' +
+         '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Get a sound and a red badge on the OpenBook app icon when a new message arrives, even when OpenBook is closed. On a phone, add OpenBook to your home screen first for the best experience.</p>' +
+         '<button class="btn btn-soft btn-block" id="epPushBtn">Turn on message notifications</button>' +
+         '<div id="epPushMsg" class="shint" style="font-size:12px;margin-top:8px"></div>' +
+         '</div>')
+        : '') +
       '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
       '<div class="shint" style="font-size:12px;margin-bottom:6px">Your data</div>' +
       '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Download everything OpenBook holds about you. Your data is yours, and it is never sold.</p>' +
@@ -3213,6 +3319,52 @@
     }
     loadRelList(m, '#epBlockedList', 'block');
     loadRelList(m, '#epMutedList', 'mute');
+
+    // Notifications: turn Web Push for new DMs on or off on this device.
+    var _pushBtn = m.q('#epPushBtn'), _pushMsg = m.q('#epPushMsg');
+    if (_pushBtn) {
+      var _renderPush = async function () {
+        if (!pushSupported()) {
+          if (pwaIosSafari()) {
+            _pushBtn.style.display = 'none';
+            _pushMsg.innerHTML = 'On iPhone or iPad, first add OpenBook to your Home Screen (Share, then <strong>Add to Home Screen</strong>), open it from there, and this option appears.';
+          } else {
+            _pushBtn.disabled = true;
+            _pushBtn.textContent = 'Not supported on this browser';
+          }
+          return;
+        }
+        var perm = Notification.permission;
+        if (perm === 'denied') {
+          _pushBtn.disabled = true; _pushBtn.textContent = 'Notifications are blocked';
+          _pushMsg.innerHTML = 'You blocked notifications for OpenBook. Re-allow them in your browser site settings to turn them on.';
+          return;
+        }
+        var reg = await pushRegistration();
+        var sub = reg ? await reg.pushManager.getSubscription() : null;
+        var on = perm === 'granted' && !!sub;
+        _pushBtn.dataset.on = on ? '1' : '';
+        _pushBtn.textContent = on ? 'Turn off message notifications' : 'Turn on message notifications';
+        _pushMsg.textContent = on ? 'Notifications are on for this device.' : '';
+      };
+      _pushBtn.onclick = async function () {
+        _pushBtn.disabled = true;
+        if (_pushBtn.dataset.on === '1') {
+          await disablePushNotifications();
+          toast('Notifications turned off on this device');
+        } else {
+          var r = await enablePushNotifications();
+          if (r.ok) toast('Notifications are on');
+          else if (r.reason === 'denied') toast('Notifications are blocked in your browser settings');
+          else if (r.reason === 'dismissed') toast('Notification permission was not granted');
+          else if (r.reason === 'unsupported') toast('This browser does not support notifications');
+          else toast('Could not turn on notifications, please try again');
+        }
+        _pushBtn.disabled = false;
+        _renderPush();
+      };
+      _renderPush();
+    }
 
     // Your data: instant JSON download, or a background ZIP (data + media).
     m.q('#epExportJson').onclick = () => { window.location.href = '/api/users/me/export.json'; };
