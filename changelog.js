@@ -55,6 +55,8 @@ const CHANGELOG = [
     body: 'CHANGE: We tidied the left menu into a clearer order (Get started, Friends, Groups, Saved, Invite friends, Jury duty, Suggest us, Support OpenBook), and moved the light and dark switch up to the top bar as a quick moon or sun button so it is always one tap away. The Suggestions page is now called Suggest us.' },
   { slug: '2026-07-05-message-notifications',
     body: 'UPDATE: You can now be notified about new messages. Turn on notifications in Settings and a new direct message reaches you with a sound and a red count on the OpenBook app icon, even when OpenBook is closed. It works best on your phone once you add OpenBook to your home screen. It is fully your choice: opt in per device, turn it off any time, and like everything here it never touches anyone karma, standing, or reach.' },
+  { slug: '2026-07-05-notifications-guide',
+    body: 'CHANGE: The Notifications section in Settings now has a short step-by-step guide showing exactly how to turn message notifications on: add OpenBook to your home screen, open it from that icon, then tap Allow. It also explains that on a computer you can skip the home-screen step, and what to do if you tapped Block by mistake.' },
 ];
 
 async function publishChangelog() {

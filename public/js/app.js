@@ -3201,8 +3201,17 @@
       (pushOn ?
         ('<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
          '<div class="shint" style="font-size:12px;margin-bottom:8px">Notifications</div>' +
-         '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Get a sound and a red badge on the OpenBook app icon when a new message arrives, even when OpenBook is closed. On a phone, add OpenBook to your home screen first for the best experience.</p>' +
-         '<button class="btn btn-soft btn-block" id="epPushBtn">Turn on message notifications</button>' +
+         '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 10px">Get notified of new messages with a sound and a red count on the OpenBook app icon, even when OpenBook is closed. It stays off until you turn it on here, and you can turn it off any time. Notifications never affect your karma, standing, or reach.</p>' +
+         '<div class="push-guide">' +
+           '<div class="push-guide-title">How to turn it on</div>' +
+           '<ol class="push-guide-steps">' +
+             '<li><strong>On your phone, add OpenBook to your home screen first.</strong> On iPhone, tap the Share icon in Safari, then Add to Home Screen. On Android, tap Install when your browser offers it.</li>' +
+             '<li>Open OpenBook from that new home-screen icon (not the browser tab).</li>' +
+             '<li>Tap the button below and choose Allow when your phone asks.</li>' +
+           '</ol>' +
+           '<div class="push-guide-note">On a computer you can skip step 1: just tap the button and allow. iPhone needs iOS 16.4 or newer, and notifications only work from the home-screen app, not a Safari tab. If you ever tapped Block by mistake, re-allow notifications for OpenBook in your browser site settings.</div>' +
+         '</div>' +
+         '<button class="btn btn-soft btn-block" id="epPushBtn" style="margin-top:12px">Turn on message notifications</button>' +
          '<div id="epPushMsg" class="shint" style="font-size:12px;margin-top:8px"></div>' +
          '</div>')
         : '') +
