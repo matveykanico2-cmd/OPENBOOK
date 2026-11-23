@@ -123,6 +123,16 @@ db.init = async function init() {
   // CASCADE throughout). Set on the connection before any schema work.
   try { await client.execute('PRAGMA foreign_keys = ON;'); } catch (e) { /* some hosts manage this globally */ }
 
+  // Local SQLite gets a durable write-ahead log and a small busy timeout. This
+  // lets feed reads continue while a post or notification is being written and
+  // prevents short write bursts from failing with SQLITE_BUSY. Turso manages
+  // these settings on the remote side, so never send them there.
+  if (!isRemote) {
+    try {
+      await db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;');
+    } catch (e) { /* a managed SQLite host may own these pragmas */ }
+  }
+
   await db.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id            INTEGER PRIMARY KEY AUTOINCREMENT,

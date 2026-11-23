@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>OpenBook</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b51e8'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>O</text></svg>" />
+  <title>Nexora — social, on your terms</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231877f2'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>N</text></svg>" />
   <!-- Progressive Web App: installable to the home screen -->
   <link rel="manifest" href="/manifest.webmanifest" />
-  <meta name="theme-color" content="#5b51e8" />
+  <meta name="theme-color" content="#1877f2" />
   <link rel="apple-touch-icon" href="/icon.svg" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="OpenBook" />
+  <meta name="apple-mobile-web-app-title" content="Nexora" />
   <meta name="mobile-web-app-capable" content="yes" />
   <script>try{var t=localStorage.getItem('ob_theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
   <link rel="stylesheet" href="/css/style.css" />
@@ -21,11 +21,11 @@
   <header class="topbar">
     <div class="topbar-left">
       <div class="logo" data-nav="feed">
-        <span class="brand-mark">O</span>
-        <span class="brand name">OpenBook</span>
+        <span class="brand-mark">N</span>
+        <span class="brand name">Nexora</span>
       </div>
       <div class="search">
-        <input type="text" id="searchInput" placeholder="Search OpenBook" autocomplete="off" />
+        <input type="text" id="searchInput" placeholder="Search Nexora" autocomplete="off" />
       </div>
     </div>
     <nav class="nav-primary">
@@ -44,9 +44,19 @@
       <button class="nav-btn" id="notifBtn" title="Notifications">
         &#128276;<span class="badge hidden" id="notifBadge">0</span>
       </button>
-      <button class="nav-btn" id="meBtn" title="Your profile"></button>
+      <button class="nav-btn account-trigger" id="meBtn" title="Account menu" aria-label="Open account menu" aria-expanded="false"></button>
     </div>
   </header>
+
+  <!-- Account center: switching accounts always goes through the normal login flow;
+       passwords and session tokens are never stored in the browser. -->
+  <div class="account-menu hidden" id="accountMenu" role="menu" aria-label="Account menu">
+    <div class="account-menu-head" id="accountMenuHead"></div>
+    <div class="account-menu-divider"></div>
+    <button class="account-menu-item" id="accountProfile" role="menuitem"><span>👤</span><span>View profile</span></button>
+    <button class="account-menu-item" id="accountAdd" role="menuitem"><span>＋</span><span>Add another account</span></button>
+    <button class="account-menu-item account-menu-danger" id="accountLogout" role="menuitem"><span>↪</span><span>Log out</span></button>
+  </div>
 
   <!-- Notifications dropdown -->
   <div class="dropdown hidden" id="notifDropdown">

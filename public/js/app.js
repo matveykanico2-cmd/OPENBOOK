@@ -561,7 +561,7 @@
 
   function setupChrome() {
     setupChromeAvatar();
-    document.getElementById('meBtn').onclick = () => go('profile', ME.id);
+    setupAccountMenu();
 
     // Wire every nav target: top-bar logo + center tabs, the messages button,
     // and the mobile bottom-nav tabs (all carry data-nav).
@@ -626,6 +626,20 @@
         }
       } finally { isPopNavigating = false; }
     });
+  }
+
+  function setupAccountMenu() {
+    const btn = document.getElementById('meBtn');
+    const menu = document.getElementById('accountMenu');
+    if (!btn || !menu) return;
+    const head = document.getElementById('accountMenuHead');
+    if (head) head.innerHTML = esc(ME.name || 'Your account') + (ME.email ? '<span class="account-email">' + esc(ME.email) + '</span>' : '');
+    const close = () => { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); };
+    btn.onclick = (e) => { e.stopPropagation(); const open = menu.classList.toggle('hidden'); btn.setAttribute('aria-expanded', String(!open)); };
+    document.getElementById('accountProfile').onclick = () => { close(); go('profile', ME.id); };
+    document.getElementById('accountAdd').onclick = async () => { close(); await doLogout(); };
+    document.getElementById('accountLogout').onclick = async () => { close(); await doLogout(); };
+    document.addEventListener('click', (e) => { if (!menu.contains(e.target) && !btn.contains(e.target)) close(); });
   }
 
   function setupChromeAvatar() {

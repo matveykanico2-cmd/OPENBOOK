@@ -5,6 +5,7 @@
 const path = require('path');
 const http = require('http');
 const express = require('express');
+const compression = require('compression');
 // Make Express forward rejected promises from async route handlers to the error
 // handler below (Express 4 does not do this on its own). With the database now
 // answering over the network, every handler is async, so this is what turns a
@@ -21,6 +22,10 @@ const { initSockets } = require('./sockets');
 const { logger } = require('./logger');
 
 const app = express();
+// Compress JSON, HTML, CSS and JavaScript responses. Media files and already
+// compressed formats are skipped automatically by the compression middleware.
+// This keeps the first feed load small without changing API payloads.
+app.use(compression({ threshold: 1024 }));
 // Trust the hosting platform's reverse proxy so secure cookies and client IPs
 // (used by the rate limiter) are detected correctly once deployed.
 app.set('trust proxy', 1);
@@ -196,7 +201,11 @@ app.use('/uploads', (req, res, next) => {
   res.set('Cache-Control', 'public, max-age=3600');
   return res.redirect(302, mediaStore.publicUrl(key));
 });
-app.use('/uploads', express.static(path.join(process.env.DATA_DIR || __dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(process.env.DATA_DIR || __dirname, 'uploads'), {
+  maxAge: '1y',
+  immutable: true,
+  etag: true,
+}));
 
 // File-attachment downloads. Forces a safe attachment download (Content-Disposition
 // + octet-stream) so an uploaded document can never run inline as a page in the
@@ -236,7 +245,11 @@ app.get('/sw.js', (req, res) => {
     headers: { 'Cache-Control': 'no-cache', 'Service-Worker-Allowed': '/' },
   });
 });
-app.use(express.static(path.join(__dirname, 'public'), { index: false }));
+app.use(express.static(path.join(__dirname, 'public'), {
+  index: false,
+  maxAge: '1h',
+  etag: true,
+}));
 
 // Throttle auth attempts to slow brute force and signup abuse. Only the mutating
 // auth calls (POST signup/login/logout/resend) need throttling; the read-only
@@ -306,6 +319,18 @@ app.use('/api', async (req, res, next) => {
       code: 'UNVERIFIED',
     });
   } catch (e) { return next(e); }
+});
+
+// Lightweight readiness probe for Render, Kubernetes, uptime monitors and
+// reverse proxies. It checks the actual database connection, not just whether
+// the Node process is alive.
+app.get('/healthz', async (req, res) => {
+  try {
+    await gateDb.prepare('SELECT 1 AS ok').get();
+    res.json({ ok: true, service: 'nexora', database: 'ready' });
+  } catch (e) {
+    res.status(503).json({ ok: false, service: 'nexora', database: 'unavailable' });
+  }
 });
 
 // Public funding info for the Support page (links are set via env so they can be
@@ -673,6 +698,23 @@ app.use((err, req, res, next) => {
 // Never let one stray async error take down the whole server for everyone.
 process.on('uncaughtException', (e) => logger.error({ err: e }, 'uncaughtException'));
 process.on('unhandledRejection', (e) => logger.error({ err: e instanceof Error ? e : new Error(String(e)) }, 'unhandledRejection'));
+
+// Let the hosting platform drain active requests and Socket.IO connections
+// during deploys instead of cutting users off mid-message or mid-upload.
+let shuttingDown = false;
+function gracefulShutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info({ signal }, 'graceful shutdown started');
+  io.close();
+  server.close(() => {
+    logger.info('graceful shutdown complete');
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 15000).unref();
+}
+process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.once('SIGINT', () => gracefulShutdown('SIGINT'));
 
 const PORT = process.env.PORT || 3000;
 // Build the database schema FIRST (it is now a networked database, so this is
