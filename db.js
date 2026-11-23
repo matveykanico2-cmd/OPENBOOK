@@ -486,6 +486,9 @@ db.init = async function init() {
     }
   }
   await addColumn('users', 'verify_token TEXT', 'verify_token');
+  // Optional migration for the signup phone field. Existing accounts keep an
+  // empty value; new accounts receive the normalized number from auth/signup.
+  await addColumn('users', "phone TEXT NOT NULL DEFAULT ''", 'phone');
 
   // --- Password reset (forgot password) ---
   // A one-time token + expiry, set when a reset is requested and cleared once the

@@ -132,10 +132,8 @@
   function show(id) { const n = document.getElementById(id); if (n) n.classList.remove('hidden'); }
   function setupAltAuth(cfg) {
     const googleOn = !!(cfg && cfg.googleEnabled);
-    const passkeyOn = !!(cfg && cfg.webauthnEnabled) && window.OBPasskey && OBPasskey.supported();
     if (googleOn) { show('googleLoginLink'); show('googleAuthSignup'); }
-    if (passkeyOn) { show('passkeyLoginBtn'); wirePasskeyLogin(); }
-    if (googleOn || passkeyOn) show('altAuthLogin');
+    if (googleOn) show('altAuthLogin');
   }
   let _passkeyWired = false;
   function wirePasskeyLogin() {
@@ -301,13 +299,14 @@
     const btn = document.getElementById('signupBtn');
     const name = document.getElementById('signupName').value.trim();
     const email = document.getElementById('signupEmail').value.trim();
+    const phone = document.getElementById('signupPhone').value.trim();
     const password = document.getElementById('signupPassword').value;
     btn.disabled = true;
     btn.textContent = 'Creating account...';
     try {
       const proof = await signupProof();
       const ref = new URLSearchParams(location.search).get('ref') || '';
-      await API.signup(name, email, password, Object.assign({
+      await API.signup(name, email, password, Object.assign({ phone: phone }, {
         fp: deviceFingerprint(), ref: ref,
         hp_token: document.getElementById('signupHp').value,
         turnstileToken: captchaToken('signup'),

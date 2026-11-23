@@ -114,6 +114,7 @@ router.get('/challenge', (req, res) => res.json(makeChallenge()));
 function selfUser(u) {
   return Object.assign(publicUser(u), {
     email: u.email,
+    phone: u.phone || '',
     emailVerified: !!u.email_verified,
     isAdmin: !!u.is_admin,
     googleLinked: !!u.google_id, // whether a Google account is connected
@@ -125,6 +126,7 @@ router.post('/signup', async (req, res, next) => {
  try {
   const name = (req.body.name || '').trim();
   const email = (req.body.email || '').trim().toLowerCase();
+  const phone = String(req.body.phone || '').trim();
   const password = req.body.password || '';
   const fingerprint = (req.body.fp || req.body.fingerprint || '').toString();
 
@@ -134,11 +136,15 @@ router.post('/signup', async (req, res, next) => {
   if (botTrapped(req)) {
     return res.status(400).json({ error: 'Could not verify your browser. Please refresh the page and try again.', code: 'POW_FAILED' });
   }
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email and password are all required' });
+  if (!name || !email || !phone || !password) {
+    return res.status(400).json({ error: 'Name, email, phone and password are all required' });
   }
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
     return res.status(400).json({ error: 'Please enter a valid email address' });
+  }
+  const phoneDigits = phone.replace(/[^\d+]/g, '');
+  if (!/^\+?[1-9]\d{7,14}$/.test(phoneDigits)) {
+    return res.status(400).json({ error: 'Please enter a valid phone number' });
   }
   if (password.length < 8) {
     return res.status(400).json({ error: 'Password must be at least 8 characters' });
@@ -176,8 +182,8 @@ router.post('/signup', async (req, res, next) => {
   // set up (RESEND_API_KEY). This keeps the live demo usable before that.
   const verified = (EMAIL_CONFIGURED && REQUIRE_EMAIL_VERIFICATION) ? 0 : 1;
   const info = await db
-    .prepare('INSERT INTO users (name, email, password_hash, verify_token, email_verified) VALUES (?, ?, ?, ?, ?)')
-    .run(name, email, hash, token, verified);
+    .prepare('INSERT INTO users (name, email, phone, password_hash, verify_token, email_verified) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(name, email, phoneDigits, hash, token, verified);
 
   await createSession(info.lastInsertRowid, res);
   // Start this account's audit trail at the baseline standing.
@@ -277,7 +283,9 @@ router.post('/reset-password', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const email = (req.body.email || '').trim().toLowerCase();
+  const identifier = String(req.body.email || '').trim();
+  const email = identifier.toLowerCase();
+  const phone = identifier.replace(/[^\d+]/g, '');
   const password = req.body.password || '';
 
   // Silent honeypot: a filled trap field means a bot. Answer with the normal
@@ -292,7 +300,7 @@ router.post('/login', async (req, res) => {
   if (email && loginBlocked(email)) {
     return res.status(429).json({ error: 'Too many failed attempts for this account. Please wait a few minutes, or reset your password.' });
   }
-  const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+  const user = await db.prepare('SELECT * FROM users WHERE lower(email) = ? OR phone = ?').get(email, phone);
   // Always run one bcrypt comparison (the real hash, or a dummy when the email is
   // unknown) so a wrong email and a wrong password take the same time, closing the
   // timing side-channel that would otherwise reveal which emails are registered.
@@ -450,7 +458,10 @@ router.get('/google/callback', oauthLimiter, async (req, res) => {
 // identity, exactly like a password: it never affects karma, standing, reach, or
 // votes (credible neutrality). No external setup or API key is needed, so it is
 // always on; the browser feature-detects support and hides the buttons if absent.
-const WEBAUTHN_ENABLED = process.env.WEBAUTHN_DISABLED !== '1';
+// Password login is the only supported login method for Nexora. Keep the old
+// WebAuthn routes dormant so existing installations can migrate safely without
+// exposing a passkey button or prompting users for a device key.
+const WEBAUTHN_ENABLED = false;
 
 // @simplewebauthn/server is ESM-only; load it lazily from this CommonJS module and
 // cache the module object after the first import.

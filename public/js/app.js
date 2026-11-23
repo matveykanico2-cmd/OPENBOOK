@@ -2072,13 +2072,13 @@
   /* ---------- reactions (Facebook-style) ---------- */
 
   const REACTIONS = [
-    { key: 'like', emoji: '👍', label: 'Like' },
-    { key: 'love', emoji: '❤️', label: 'Love' },
-    { key: 'care', emoji: '🤗', label: 'Care' },
-    { key: 'haha', emoji: '😆', label: 'Haha' },
-    { key: 'wow', emoji: '😮', label: 'Wow' },
-    { key: 'sad', emoji: '😢', label: 'Sad' },
-    { key: 'angry', emoji: '😠', label: 'Angry' },
+    { key: 'like', icon: 'like', label: 'Like' },
+    { key: 'love', icon: 'love', label: 'Love' },
+    { key: 'care', icon: 'care', label: 'Care' },
+    { key: 'haha', icon: 'haha', label: 'Haha' },
+    { key: 'wow', icon: 'wow', label: 'Wow' },
+    { key: 'sad', icon: 'sad', label: 'Sad' },
+    { key: 'angry', icon: 'angry', label: 'Angry' },
   ];
   const REACTION_MAP = {};
   REACTIONS.forEach((r) => { REACTION_MAP[r.key] = r; });
@@ -2088,8 +2088,8 @@
     const present = REACTIONS.filter((r) => summary.counts[r.key])
       .sort((a, b) => summary.counts[b.key] - summary.counts[a.key])
       .slice(0, 3);
-    const emojis = present.map((r) => '<span class="rx-emoji">' + r.emoji + '</span>').join('');
-    return '<span class="rx-sum">' + emojis + ' ' + summary.total + '</span>';
+    const icons = present.map((r) => '<span class="rx-icon rx-' + r.icon + '" aria-hidden="true"></span>').join('');
+    return '<span class="rx-sum">' + icons + ' ' + summary.total + '</span>';
   }
 
   // A reaction picker button. opts.small renders a compact text link (comments).
@@ -2104,7 +2104,7 @@
     function paint() {
       const r = mine ? REACTION_MAP[mine] : null;
       if (opts.small) btn.innerHTML = r ? '<span class="rx-mine">' + r.label + '</span>' : 'Like';
-      else btn.innerHTML = r ? (r.emoji + ' <span class="al rx-mine">' + r.label + '</span>') : '👍 <span class="al">Like</span>';
+      else btn.innerHTML = r ? ('<span class="rx-icon rx-' + r.icon + '" aria-hidden="true"></span> <span class="al rx-mine">' + r.label + '</span>') : '<span class="rx-icon rx-like" aria-hidden="true"></span> <span class="al">Like</span>';
       btn.classList.toggle('reacted', !!mine);
     }
     function closePicker() {
@@ -2122,7 +2122,7 @@
       if (picker) { closePicker(); return; }
       picker = el('<div class="rx-picker"></div>');
       REACTIONS.forEach((r) => {
-        const b = el('<button class="rx-opt' + (mine === r.key ? ' on' : '') + '" title="' + r.label + '">' + r.emoji + '</button>');
+        const b = el('<button class="rx-opt' + (mine === r.key ? ' on' : '') + '" title="' + r.label + '"><span class="rx-icon rx-' + r.icon + '" aria-hidden="true"></span></button>');
         b.onclick = (e) => { e.stopPropagation(); react(r.key); };
         picker.appendChild(b);
       });

@@ -29,20 +29,20 @@
       </div>
     </div>
     <nav class="nav-primary">
-      <button class="nav-tab" data-nav="feed" title="Home"><span class="ti">&#127968;</span><span class="tl">Home</span></button>
-      <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti">&#128227;</span><span class="tl">Communities</span></button>
-      <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti">&#128722;</span><span class="tl">Marketplace</span></button>
-      <button class="nav-tab" data-nav="dashboard" title="Professional dashboard"><span class="ti">&#128202;</span><span class="tl">Dashboard</span></button>
+      <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl">Home</span></button>
+      <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl">Communities</span></button>
+      <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl">Marketplace</span></button>
+      <button class="nav-tab" data-nav="dashboard" title="Professional dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl">Dashboard</span></button>
     </nav>
     <div class="topbar-right">
       <button class="nav-btn theme-btn" id="themeBtn" title="Toggle light / dark mode" aria-label="Toggle light / dark mode">
-        <span class="ti" id="themeIcon">&#127769;</span><span class="tl" id="themeLabel">Dark</span>
+        <span class="ti icon-moon" id="themeIcon" aria-hidden="true"></span><span class="tl" id="themeLabel">Dark</span>
       </button>
       <button class="nav-btn" data-nav="messages" title="Messages">
-        &#128172;<span class="badge hidden" id="messagesBadge">0</span>
+        <span class="ti icon-message" aria-hidden="true"></span><span class="badge hidden" id="messagesBadge">0</span>
       </button>
       <button class="nav-btn" id="notifBtn" title="Notifications">
-        &#128276;<span class="badge hidden" id="notifBadge">0</span>
+        <span class="ti icon-bell" aria-hidden="true"></span><span class="badge hidden" id="notifBadge">0</span>
       </button>
       <button class="nav-btn account-trigger" id="meBtn" title="Account menu" aria-label="Open account menu" aria-expanded="false"></button>
     </div>
@@ -53,9 +53,9 @@
   <div class="account-menu hidden" id="accountMenu" role="menu" aria-label="Account menu">
     <div class="account-menu-head" id="accountMenuHead"></div>
     <div class="account-menu-divider"></div>
-    <button class="account-menu-item" id="accountProfile" role="menuitem"><span>👤</span><span>View profile</span></button>
-    <button class="account-menu-item" id="accountAdd" role="menuitem"><span>＋</span><span>Add another account</span></button>
-    <button class="account-menu-item account-menu-danger" id="accountLogout" role="menuitem"><span>↪</span><span>Log out</span></button>
+    <button class="account-menu-item" id="accountProfile" role="menuitem"><span class="menu-icon icon-user" aria-hidden="true"></span><span>View profile</span></button>
+    <button class="account-menu-item" id="accountAdd" role="menuitem"><span class="menu-icon icon-plus" aria-hidden="true"></span><span>Add another account</span></button>
+    <button class="account-menu-item account-menu-danger" id="accountLogout" role="menuitem"><span class="menu-icon icon-logout" aria-hidden="true"></span><span>Log out</span></button>
   </div>
 
   <!-- Notifications dropdown -->
@@ -73,10 +73,10 @@
 
   <!-- Mobile-only bottom navigation (the primary destinations). -->
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-tab" data-nav="feed" title="Home"><span class="ti">&#127968;</span><span class="tl">Home</span></button>
-    <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti">&#128227;</span><span class="tl">Communities</span></button>
-    <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti">&#128722;</span><span class="tl">Market</span></button>
-    <button class="nav-tab" data-nav="dashboard" title="Dashboard"><span class="ti">&#128202;</span><span class="tl">Dashboard</span></button>
+    <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl">Home</span></button>
+    <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl">Communities</span></button>
+    <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl">Market</span></button>
+    <button class="nav-tab" data-nav="dashboard" title="Dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl">Dashboard</span></button>
   </nav>
 
   <!-- Mount points for modals, toasts, story viewer -->
