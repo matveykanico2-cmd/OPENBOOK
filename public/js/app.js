@@ -1,5 +1,5 @@
 // app.js
-// The OpenBook single page app: top bar, feed, profiles, friends, stories,
+// The Nexora single page app: top bar, feed, profiles, friends, stories,
 // notifications, search, and the messages view. Talks to the JSON API (api.js)
 // and the live socket (chat.js).
 
@@ -110,10 +110,10 @@
     size = size || 40;
     const dim = 'width:' + size + 'px;height:' + size + 'px;';
     const gold = (user && user.founder) ? ' av-gold' : ''; // golden ring for the founder
-    // The official OpenBook account always shows the brand "O" mark, so it reads as
+    // The official Nexora account always shows the brand "O" mark, so it reads as
     // genuinely official everywhere it appears (feed, profile, messages, comments).
     if (user && user.official) {
-      return '<span class="avatar avatar-official" style="' + dim + 'font-size:' + Math.round(size * 0.5) + 'px">O</span>';
+      return '<span class="avatar avatar-official" style="' + dim + 'font-size:' + Math.round(size * 0.5) + 'px">N</span>';
     }
     if (user && user.avatar) {
       const pos = user.avatarPos ? 'object-position:' + esc(user.avatarPos) + ';' : '';
@@ -128,7 +128,7 @@
   // Cosmetic Founder badge for the platform founder(s). Never reputation.
   function founderBadge(user) {
     if (!user || !user.founder) return '';
-    return ' <span class="founder-badge" title="Founder of OpenBook">&#9733; Founder</span>';
+    return ' <span class="founder-badge" title="Founder of Nexora">&#9733; Founder</span>';
   }
   // Cosmetic Pioneer badge for the first 5000 members. It is blue by default, but
   // takes the COLOR of the member's ACTIVE support tier while they support (bronze
@@ -142,7 +142,7 @@
     const cls = (user.badge && tierClass[user.badge]) ? tierClass[user.badge] : '';
     const tip = user.badge
       ? 'Pioneer + ' + (user.tierName || 'Supporter') + ' supporter'
-      : 'One of the first 5,000 members of OpenBook';
+      : 'One of the first 5,000 members of Nexora';
     return ' <span class="pioneer-badge' + cls + '" title="' + esc(tip) + '">&#9873; Pioneer</span>';
   }
   // Premium profile themes: preset accent + gradient combos. Ids MUST match the
@@ -183,11 +183,11 @@
     out += pioneerBadge(user);
     return out;
   }
-  // Marks the automated OpenBook account so it clearly reads as official, not a
+  // Marks the automated Nexora account so it clearly reads as official, not a
   // copycat. Never reputation; purely an identity marker.
   function officialBadge(user) {
     if (!user || !user.official) return '';
-    return ' <span class="official-badge" title="The official OpenBook account">&#10003; Official</span>';
+    return ' <span class="official-badge" title="The official Nexora account">&#10003; Official</span>';
   }
   // Small colored supporter badge (bronze/silver/gold). Shown on profiles.
   // For a Pioneer we SUPPRESS this chip: their support tier is shown by coloring
@@ -246,7 +246,7 @@
   }
 
   // Small, built-in translator for posts, messages and copied text. It uses the
-  // public MyMemory endpoint, keeps the UI inside OpenBook, and degrades cleanly
+  // public MyMemory endpoint, keeps the UI inside Nexora, and degrades cleanly
   // with a useful error when the translation service is unavailable.
   function openTranslator() {
     const langs = [
@@ -259,7 +259,7 @@
     const target = langs.some((l) => l[0].toLowerCase() === browserLang) && browserLang !== 'auto' ? browserLang : 'en';
     const m = modal(
       '<div class="translator-modal-inner">' +
-        '<div class="translator-head"><div><h3 class="translator-title"><span class="ti icon-language" aria-hidden="true"></span> Translator</h3><p class="translator-sub">Translate text without leaving OpenBook.</p></div></div>' +
+        '<div class="translator-head"><div><h3 class="translator-title"><span class="ti icon-language" aria-hidden="true"></span> Translator</h3><p class="translator-sub">Translate text without leaving Nexora.</p></div></div>' +
         '<div class="translator-grid">' +
           '<div class="translator-pane"><label for="trSourceLang">From</label><select class="input" id="trSourceLang">' + options('auto') + '</select><textarea class="input" id="trSource" placeholder="Paste or type text here..."></textarea></div>' +
           '<div class="translator-pane"><label for="trTargetLang">To</label><select class="input" id="trTargetLang">' + options(target) + '</select><textarea class="input translator-output" id="trOutput" placeholder="Translation will appear here" readonly></textarea></div>' +
@@ -302,7 +302,7 @@
   // Share a link via the device's native share sheet (mobile, and some desktops),
   // falling back to copying it to the clipboard so it always works.
   function shareLink(url, title) {
-    try { if (navigator.share) { navigator.share({ title: title || 'OpenBook', url: url }).catch(function () {}); return; } } catch (e) {}
+    try { if (navigator.share) { navigator.share({ title: title || 'Nexora', url: url }).catch(function () {}); return; } } catch (e) {}
     try { navigator.clipboard.writeText(url).then(function () { toast('Link copied to clipboard'); }, function () { toast(url); }); }
     catch (e) { toast(url); }
   }
@@ -353,7 +353,7 @@
     else if (params.get('verified') === '0') { toast('That verification link was invalid or expired.'); }
     if (params.has('verified')) window.history.replaceState({}, '', '/app');
     if (params.get('google') === 'connected') toast('Your Google account is now connected.');
-    else if (params.get('google') === 'inuse') toast('That Google account is already linked to another OpenBook account.');
+    else if (params.get('google') === 'inuse') toast('That Google account is already linked to another Nexora account.');
     if (params.has('google')) window.history.replaceState({}, '', '/app');
 
     renderVerifyBanner();
@@ -365,7 +365,7 @@
     // Fresh signup: land on Invite friends (growth loop) instead of an empty feed.
     if (params.get('welcome') === '1') {
       window.history.replaceState({}, '', '/app');
-      toast('Welcome to OpenBook! Invite a few friends and your feed comes alive.');
+      toast('Welcome to Nexora! Invite a few friends and your feed comes alive.');
       return go('invite');
     }
     // Sitelinks searchbox target (WebSite SearchAction): /app?q=term opens search.
@@ -399,8 +399,8 @@
     var view = document.getElementById('view');
     if (view && !view.innerHTML.trim()) {
       view.innerHTML = '<div class="public-shell"><div class="card"><div class="section-title">Not available</div>' +
-        '<div class="pmeta">This content is private or does not exist. OpenBook is a social network where money never buys reach and the community decides what rises.</div>' +
-        '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a></p></div></div>';
+        '<div class="pmeta">This content is private or does not exist. Nexora is a social network where money never buys reach and the community decides what rises.</div>' +
+        '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join Nexora</a></p></div></div>';
     }
   }
 
@@ -464,7 +464,7 @@
   }
 
   function setupPWA() {
-    // Register the (non-caching) service worker so OpenBook is installable. Failure
+    // Register the (non-caching) service worker so Nexora is installable. Failure
     // is harmless: it just means no install prompt, the app works exactly the same.
     if ('serviceWorker' in navigator) {
       try { navigator.serviceWorker.register('/sw.js').catch(() => {}); } catch (e) {}
@@ -480,11 +480,11 @@
       deferredInstallPrompt = null;
       const b = document.getElementById('installBanner'); if (b) b.remove();
       try { localStorage.setItem('ob_pwa_installed', '1'); } catch (e) {}
-      toast('OpenBook is now on your home screen.');
+      toast('Nexora is now on your home screen.');
     });
   }
 
-  // A dismissible yellow bar at the top inviting the user to install OpenBook. Shown
+  // A dismissible yellow bar at the top inviting the user to install Nexora. Shown
   // when the browser reports the app is installable, or on iOS Safari (Add to Home
   // Screen, which has no prompt event). Hidden once installed or dismissed.
   function renderInstallBanner() {
@@ -497,7 +497,7 @@
     if (!deferredInstallPrompt && !ios) return; // not installable yet, and not iOS Safari
     const banner = el(
       '<div id="installBanner" class="install-banner">' +
-      '<span class="ib-text">&#128241; Install OpenBook on your phone for a faster, full-screen app.</span>' +
+      '<span class="ib-text">&#128241; Install Nexora on your phone for a faster, full-screen app.</span>' +
       '<button class="ib-btn" id="ibInstall">Install on your phone now</button>' +
       '<button class="ib-x" id="ibClose" title="Not now" aria-label="Dismiss">&times;</button>' +
       '</div>'
@@ -520,17 +520,17 @@
   }
 
   function installIosHelp() {
-    modal('<div class="mh"><h3>&#128241; Add OpenBook to your Home Screen</h3></div><div class="mc">' +
+    modal('<div class="mh"><h3>&#128241; Add Nexora to your Home Screen</h3></div><div class="mc">' +
       '<ol style="line-height:1.85;padding-left:20px;margin:0">' +
       '<li>Tap the <b>Share</b> button at the bottom of Safari (the square with an up arrow).</li>' +
       '<li>Scroll down and tap <b>Add to Home Screen</b>.</li>' +
-      '<li>Tap <b>Add</b>, and OpenBook appears as an app on your phone.</li>' +
+      '<li>Tap <b>Add</b>, and Nexora appears as an app on your phone.</li>' +
       '</ol></div>');
   }
 
   /* ===================== web push (DM notifications) ===================== */
   // Delivers a system notification (with the phone's own sound) and a red count on
-  // the app icon when a new DM arrives while OpenBook is closed or backgrounded. Only
+  // the app icon when a new DM arrives while Nexora is closed or backgrounded. Only
   // offered when the server has push enabled (VAPID keys set: CONFIG.pushEnabled) and
   // the browser supports it. We never prompt on our own: the Settings toggle asks on
   // a real tap; ensurePushSubscribed only refreshes an ALREADY-granted subscription.
@@ -656,9 +656,9 @@
       const mn = e.target.closest('[data-mention]');
       if (mn) { e.preventDefault(); const u = mn.getAttribute('data-mention'); if (u) go('profile', u); return; }
       const shp = e.target.closest('[data-share-post]');
-      if (shp) { e.preventDefault(); e.stopPropagation(); shareLink(postShareUrl(shp.getAttribute('data-share-post')), 'OpenBook post'); return; }
+      if (shp) { e.preventDefault(); e.stopPropagation(); shareLink(postShareUrl(shp.getAttribute('data-share-post')), 'Nexora post'); return; }
       const shu = e.target.closest('[data-share-profile]');
-      if (shu) { e.preventDefault(); e.stopPropagation(); shareLink(window.location.origin + '/u/' + encodeURIComponent(shu.getAttribute('data-share-profile')), 'OpenBook profile'); return; }
+      if (shu) { e.preventDefault(); e.stopPropagation(); shareLink(window.location.origin + '/u/' + encodeURIComponent(shu.getAttribute('data-share-profile')), 'Nexora profile'); return; }
       const rep = e.target.closest('[data-report]');
       if (rep) { e.preventDefault(); e.stopPropagation(); reportModal(rep.getAttribute('data-report'), Number(rep.getAttribute('data-report-id'))); return; }
       const ap = e.target.closest('[data-appeal]');
@@ -794,7 +794,7 @@
       '<div class="side-link" data-go="invite"><span class="ic icon-gift"></span><span>Invite friends</span></div>' +
       '<div class="side-link" data-go="jury"><span class="ic icon-scale"></span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
       '<div class="side-link" data-go="suggestions"><span class="ic icon-lightbulb"></span><span>Suggest us</span></div>' +
-      '<div class="side-link" data-go="support"><span class="ic icon-heart"></span><span>Support OpenBook</span></div>' +
+      '<div class="side-link" data-go="support"><span class="ic icon-heart"></span><span>Support Nexora</span></div>' +
       '<div class="side-link" id="leftLogout"><span class="ic icon-logout"></span><span>Log out</span></div>' +
       '</div>' +
       '<nav class="rail-foot">' +
@@ -806,7 +806,7 @@
       '<a href="/terms">Terms</a>' +
       '<a href="/cookies">Cookies</a>' +
       '<a href="https://github.com/PromoAI07/OPENBOOK" target="_blank" rel="noopener">Open source</a>' +
-      '<div class="rail-foot-copy">OpenBook. Your data is yours, always.</div>' +
+      '<div class="rail-foot-copy">Nexora. Your data is yours, always.</div>' +
       '</nav>';
     rail.querySelectorAll('[data-go]').forEach((b) =>
       b.addEventListener('click', () => {
@@ -822,7 +822,7 @@
     refreshJuryBadge();
   }
 
-  // A quick tour of OpenBook: what each section is, with a one-tap link to it. Opened
+  // A quick tour of Nexora: what each section is, with a one-tap link to it. Opened
   // from the "Get started" rail entry and reusable anywhere.
   function openGetStartedGuide() {
     const sections = [
@@ -835,15 +835,15 @@
       { ic: 'icon-lightbulb', name: 'Suggestions', desc: 'Propose ideas and vote. The most-wanted get built first, in the open.', act: () => go('suggestions') },
       { ic: 'icon-gift', name: 'Invite friends', desc: 'Every 5 friends who join unlock Premium for you.', act: () => go('invite') },
       { ic: 'icon-chart', name: 'Dashboard', desc: 'Your karma, account standing, and post analytics, fully transparent.', act: () => go('dashboard') },
-      { ic: 'icon-heart', name: 'Support OpenBook', desc: 'Optional. Keeps us ad-free and independent. Money never buys reach.', act: () => go('support') },
+      { ic: 'icon-heart', name: 'Support Nexora', desc: 'Optional. Keeps us ad-free and independent. Money never buys reach.', act: () => go('support') },
     ];
     const rows = sections.map((s, i) =>
       '<button class="gs-row" data-i="' + i + '"><span class="gs-ic ti ' + s.ic + '" aria-hidden="true"></span>' +
       '<span class="gs-tx"><span class="gs-name">' + esc(s.name) + '</span><span class="gs-desc">' + esc(s.desc) + '</span></span>' +
       '<span class="gs-go">&#8250;</span></button>').join('');
     const m = modal(
-      '<div class="mh"><h3><span class="ti icon-rocket" aria-hidden="true"></span> Get started on OpenBook</h3></div>' +
-      '<div class="mc"><div class="shint" style="font-size:13px;margin-bottom:10px;line-height:1.5">Here is what each part of OpenBook is for. Tap any row to jump straight there.</div>' +
+      '<div class="mh"><h3><span class="ti icon-rocket" aria-hidden="true"></span> Get started on Nexora</h3></div>' +
+      '<div class="mc"><div class="shint" style="font-size:13px;margin-bottom:10px;line-height:1.5">Here is what each part of Nexora is for. Tap any row to jump straight there.</div>' +
       '<div class="gs-list">' + rows + '</div></div>'
     );
     m.node.querySelectorAll('.gs-row').forEach((b) => {
@@ -972,8 +972,8 @@
     setTimeout(() => btn.classList.remove('nav-ping'), 1600);
   }
   // Blinking red dot on the favicon while there are unread DMs.
-  const _FAV_BASE = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b51e8'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>O</text></svg>";
-  const _FAV_DOT = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%235b51e8'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>O</text><circle cx='25' cy='8' r='7' fill='%23ff3b30' stroke='white' stroke-width='2'/></svg>";
+  const _FAV_BASE = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231877f2'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>N</text></svg>";
+  const _FAV_DOT = "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231877f2'/><text x='16' y='23' font-size='20' fill='white' text-anchor='middle' font-family='Arial' font-weight='bold'>N</text><circle cx='25' cy='8' r='7' fill='%23ff3b30' stroke='white' stroke-width='2'/></svg>";
   let _favTimer = null, _favPhase = false;
   function faviconLink() {
     let l = document.querySelector('link[rel="icon"]');
@@ -992,7 +992,7 @@
     }
   }
   function setMessageTitle(count) {
-    document.title = count > 0 ? '(' + (count > 99 ? '99+' : count) + ') OpenBook' : 'OpenBook';
+    document.title = count > 0 ? '(' + (count > 99 ? '99+' : count) + ') Nexora' : 'Nexora';
   }
 
   // The red count on the installed app icon (home screen / dock / taskbar). Driven
@@ -1039,7 +1039,7 @@
     return '<div class="card welcome-banner" id="welcomeBanner">' +
       '<button class="welcome-x" id="welcomeClose" aria-label="Dismiss" title="Dismiss">&times;</button>' +
       '<div class="welcome-body">' +
-        '<span class="welcome-text"><span class="welcome-emoji ti icon-rocket" aria-hidden="true"></span> <strong>OpenBook just launched, and you&#39;re one of the first.</strong> Help shape it: explore every corner, then tell us what&#39;s broken or what to build next in the Suggestions box.</span>' +
+        '<span class="welcome-text"><span class="welcome-emoji ti icon-rocket" aria-hidden="true"></span> <strong>Nexora just launched, and you&#39;re one of the first.</strong> Help shape it: explore every corner, then tell us what&#39;s broken or what to build next in the Suggestions box.</span>' +
         '<button class="btn btn-primary btn-sm welcome-cta" id="welcomeSuggest">Open Suggestions</button>' +
       '</div></div>';
   }
@@ -1072,7 +1072,7 @@
     function syncFeedUI() {
       view.querySelectorAll('.tab[data-feed]').forEach((t) => t.classList.toggle('active', t.getAttribute('data-feed') === feedMode));
       hint.textContent = feedMode === 'latest' ? 'Friends, newest first'
-        : feedMode === 'discover' ? 'Public posts from across OpenBook'
+        : feedMode === 'discover' ? 'Public posts from across Nexora'
         : 'Friends + your communities, ranked';
     }
     view.querySelectorAll('.tab[data-feed]').forEach((t) => {
@@ -1094,7 +1094,7 @@
       if (!posts.length) { box.innerHTML = ''; return; }
       box.innerHTML = '';
       posts.forEach((p) => {
-        const wrap = el('<div class="ann-wrap"><div class="ann-label">&#128204; Announcement from OpenBook</div></div>');
+        const wrap = el('<div class="ann-wrap"><div class="ann-label">&#128204; Announcement from Nexora</div></div>');
         wrap.appendChild(p.community_id ? communityPostCard(p) : renderPostNode(p));
         box.appendChild(wrap);
       });
@@ -1113,7 +1113,7 @@
       if (feedMode === 'discover') {
         const r = await API.discoverFeed('hot');
         if (myLoad !== feedLoadSeq) return;
-        renderMixedFeed(container, r.posts, 'Nothing to discover yet. Public community posts from across OpenBook will show up here.');
+        renderMixedFeed(container, r.posts, 'Nothing to discover yet. Public community posts from across Nexora will show up here.');
         return;
       }
       const r = feedMode === 'latest' ? await API.feed() : await API.homeFeed(feedMode);
@@ -1131,13 +1131,13 @@
   }
 
   // Starter pack for a new/low-network member: follow the official account, join a
-  // couple of active communities, and see what is happening across OpenBook right now.
+  // couple of active communities, and see what is happening across Nexora right now.
   // myLoad ties every append to the load that started it, so a stale load is a no-op.
   async function appendStarterAndDiscover(container, isEmpty, myLoad) {
     if (myLoad !== feedLoadSeq) return;
     const starter = el('<div class="card starter-card"></div>');
     starter.innerHTML = '<div class="section-title">' + (isEmpty ? '&#128075; Welcome! Let us fill your feed' : 'Fill your feed') + '</div>' +
-      '<div class="pmeta">Follow a few accounts and communities and your Home feed comes alive. Here is what is happening across OpenBook in the meantime.</div>' +
+      '<div class="pmeta">Follow a few accounts and communities and your Home feed comes alive. Here is what is happening across Nexora in the meantime.</div>' +
       '<div class="starter-actions" id="starterActions"></div>';
     container.appendChild(starter);
     const acts = starter.querySelector('#starterActions');
@@ -1158,7 +1158,7 @@
       });
     } catch (e) {}
     if (myLoad !== feedLoadSeq) return; // a newer load took over while we fetched
-    const disc = el('<div class="card"><div class="section-title">&#127760; Discover OpenBook</div><div id="starterDiscover"></div></div>');
+    const disc = el('<div class="card"><div class="section-title">&#127760; Discover Nexora</div><div id="starterDiscover"></div></div>');
     container.appendChild(disc);
     const dbox = disc.querySelector('#starterDiscover');
     try {
@@ -1200,7 +1200,7 @@
     const myHidden = !!(pmFull && pmFull.hideSupporter);
     const board = lb || { supporters: [], total: 0, supporterCount: 0 };
 
-    // Growth-phase card: where OpenBook is on its public scaling ladder, the live
+    // Growth-phase card: where Nexora is on its public scaling ladder, the live
     // member count + the Phase-1 signup cap, and the Pioneer-badge note. Replaces
     // the old standalone Pioneer card (both are about the same 5,000 milestone).
     let growthCard = '';
@@ -1219,7 +1219,7 @@
         return '<div class="phase-step phase-' + state + '"><div class="ps-n">' + esc(p.name) + '</div><div class="ps-to">to ' + fmtN(p.to) + '</div></div>';
       }).join('');
       growthCard = '<div class="card">' +
-        '<div style="font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:18px">&#128640;</span> Where OpenBook is now: <span style="color:var(--brand)">' + esc(ph.name) + '</span> <span class="pioneer-badge">&#9873; Pioneer era</span></div>' +
+        '<div style="font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:18px">&#128640;</span> Where Nexora is now: <span style="color:var(--brand)">' + esc(ph.name) + '</span> <span class="pioneer-badge">&#9873; Pioneer era</span></div>' +
         '<div class="shint" style="font-size:13px;line-height:1.55;margin:5px 0 10px">We grow in stages, opening more capacity as support funds bigger servers. ' +
           (full ? 'Phase 1 is currently full at ' + cap.toLocaleString() + ' members. ' : 'Signups are open and capped at ' + cap.toLocaleString() + ' members for Phase 1. ') +
           'The first 5,000 members keep a permanent Pioneer badge, and supporting us funds the jump to the next phase.</div>' +
@@ -1266,7 +1266,7 @@
         business: links.paypalEmail || '',
         currency_code: 'USD',
         amount: String(plan.usd),
-        item_name: 'OpenBook ' + t.name + ' (' + (plan.label || '') + ')',
+        item_name: 'Nexora ' + t.name + ' (' + (plan.label || '') + ')',
         custom: 'ob:' + (ME && ME.id) + ':' + t.tier + ':' + (plan.cycle || ''),
         notify_url: origin + '/api/webhooks/paypal',
         'return': origin + '/app#support',
@@ -1283,7 +1283,7 @@
         business: links.paypalEmail || '',
         currency_code: 'USD',
         amount: String(amount),
-        item_name: 'OpenBook tip (thank you!)',
+        item_name: 'Nexora tip (thank you!)',
         custom: 'ob:tip:' + (ME && ME.id ? ME.id : ''),
         notify_url: origin + '/api/webhooks/paypal',
         'return': origin + '/app#support',
@@ -1323,7 +1323,7 @@
     // Explanation of fees, written under the payment section (user requested).
     const feeNote = '<div class="card"><div class="shint" style="font-size:12.5px;line-height:1.65">' +
       '<strong>About payment fees.</strong> Card processors like PayPal take a fixed fee of about $0.30 plus roughly 4.4% on <em>every</em> payment, so small or frequent charges lose a big share to fees. That is why we bill in advance, Supporter for a year, Plus for six months, Premium for three months, so that fee is paid as rarely as possible. ' +
-      '<strong>USDT (crypto) is the cheapest way to support us.</strong> It has no percentage cut and only a tiny network fee paid by the sender, so almost the whole amount reaches OpenBook. If you can, paying with USDT below is the best option.' +
+      '<strong>USDT (crypto) is the cheapest way to support us.</strong> It has no percentage cut and only a tiny network fee paid by the sender, so almost the whole amount reaches Nexora. If you can, paying with USDT below is the best option.' +
       '</div></div>';
 
     function netRow(n) {
@@ -1369,7 +1369,7 @@
     const tipCard = '<div class="card" id="tipCard">' +
       '<div style="font-weight:700;display:flex;align-items:center;gap:8px"><span style="font-size:20px">&#9749;</span> Tip the project</div>' +
       '<div class="shint" style="font-size:13px;line-height:1.55;margin:4px 0 10px">Just want to help us keep going, with no perks or badge attached? Leave a one-off tip of any size. ' +
-        (hasNets ? 'Tipping with <strong>USDT (crypto)</strong> is best: almost the whole amount reaches us, while PayPal takes a fee on every payment.' : 'Every bit goes straight to running OpenBook.') + '</div>' +
+        (hasNets ? 'Tipping with <strong>USDT (crypto)</strong> is best: almost the whole amount reaches us, while PayPal takes a fee on every payment.' : 'Every bit goes straight to running Nexora.') + '</div>' +
       (hasNets
         ? '<div style="margin-bottom:12px">' +
             '<div class="shint" style="font-size:12.5px;margin-bottom:6px"><strong>Tip with USDT (lowest fees).</strong> Send any amount to one of the USDT addresses above, then paste your hash:</div>' +
@@ -1450,10 +1450,10 @@
     function wallTotalStr(b) { return '$' + (Number(b.total) || 0).toLocaleString(undefined, { maximumFractionDigits: 2 }); }
     const wallRowsHtml = board.supporters.length
       ? board.supporters.map(supporterRow).join('')
-      : '<div class="shint" style="font-size:13px;padding:12px 0">No supporters yet. Be the first to help OpenBook grow.</div>';
+      : '<div class="shint" style="font-size:13px;padding:12px 0">No supporters yet. Be the first to help Nexora grow.</div>';
     const wallCard = '<div class="card" id="supWall">' +
       '<div class="section-title" style="margin-top:0">&#129351; Our supporters</div>' +
-      '<div class="shint" style="font-size:13px;line-height:1.55;margin:-4px 0 8px">Everyone who chips in to keep OpenBook running, newest first. This is a thank-you wall, not a ranking: it is ordered by date, never by amount, because money never buys status here. We show the last 100.</div>' +
+      '<div class="shint" style="font-size:13px;line-height:1.55;margin:-4px 0 8px">Everyone who chips in to keep Nexora running, newest first. This is a thank-you wall, not a ranking: it is ordered by date, never by amount, because money never buys status here. We show the last 100.</div>' +
       '<div id="supWallList">' + wallRowsHtml + '</div>' +
       '<div style="border-top:2px solid var(--line);margin-top:8px;padding-top:12px">' +
         '<div style="font-size:28px;font-weight:800;line-height:1;color:var(--brand)" id="supTotal">' + esc(wallTotalStr(board)) + '</div>' +
@@ -1462,9 +1462,9 @@
     '</div>';
 
     view.innerHTML =
-      '<div class="card"><div class="pname">&#10084;&#65039; Support OpenBook</div>' +
+      '<div class="card"><div class="pname">&#10084;&#65039; Support Nexora</div>' +
       '<div class="shint" style="font-size:14px;line-height:1.6;margin-top:6px">' +
-      'OpenBook is free and open source, and it will stay that way. There is no paywall and we never sell your data. ' +
+      'Nexora is free and open source, and it will stay that way. There is no paywall and we never sell your data. ' +
       'Supporter perks are cosmetic and convenience only: supporting us can never buy a place in the feed or extra weight in a vote. That stays equal for everyone.' +
       expiresNote + '</div></div>' +
       historyCard +
@@ -1477,7 +1477,7 @@
       tipCard +
       linkCard('&#128081;', 'Sponsor on GitHub', 'Back the project directly through GitHub Sponsors.', links.github, 'Sponsor on GitHub') +
       linkCard('&#129309;', 'Open Collective', 'Transparent, community funding where every expense is public.', links.opencollective, 'Give on Open Collective') +
-      '<div class="card"><div class="shint" style="font-size:12px">Why not ads? OpenBook is built on the promise that your data is yours. Surveillance ads would break that promise, so we will not run them.</div></div>';
+      '<div class="card"><div class="shint" style="font-size:12px">Why not ads? Nexora is built on the promise that your data is yours. Surveillance ads would break that promise, so we will not run them.</div></div>';
 
     view.querySelectorAll('[data-copy]').forEach((b) => (b.onclick = () => {
       try { navigator.clipboard.writeText(b.getAttribute('data-copy')); toast('Address copied'); } catch (e) { toast('Could not copy'); }
@@ -1543,7 +1543,7 @@
         '<div class="mh"><h3>&#9888;&#65039; A note on PayPal fees</h3></div>' +
         '<div class="mc">' +
         '<p style="margin-top:0">PayPal takes a fee on every payment, about <strong>$0.30 plus roughly 4.4%</strong>. On a $' + amount + ' tip that is a real slice lost for both of us. ' +
-        (networks.length ? 'Tipping with <strong>USDT (crypto)</strong> has almost no fee, so far more of it actually reaches OpenBook.' : '') + '</p>' +
+        (networks.length ? 'Tipping with <strong>USDT (crypto)</strong> has almost no fee, so far more of it actually reaches Nexora.' : '') + '</p>' +
         '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">' +
         (networks.length ? '<button class="btn btn-primary" id="tipUseCrypto">Use crypto instead</button>' : '') +
         '<a class="btn" id="tipPpGo" href="' + esc(tipPaypalUrl(amount)) + '" target="_blank" rel="noopener">Continue with PayPal</a>' +
@@ -1611,8 +1611,8 @@
     view.innerHTML =
       '<div class="card"><div class="pname">&#127881; Invite friends &amp; family</div>' +
       '<div class="shint" style="font-size:14px;line-height:1.6;margin-top:6px">' +
-      'Share OpenBook and grow it the honest way, no ads, no paid reach. For every <b>' + me.rewardEvery +
-      ' people</b> you invite who stay and use OpenBook as real humans for <b>' + me.qualifyDays +
+      'Share Nexora and grow it the honest way, no ads, no paid reach. For every <b>' + me.rewardEvery +
+      ' people</b> you invite who stay and use Nexora as real humans for <b>' + me.qualifyDays +
       ' days</b>, you earn <b>one free month of Premium</b> (the Gold badge, verified tick, and all premium perks). It stacks, so keep inviting.</div></div>' +
 
       '<div class="card"><div class="section-title">Your invite link</div>' +
@@ -1633,7 +1633,7 @@
 
       '<div class="card"><div class="section-title">Top inviters</div>' + lbHtml + '</div>' +
 
-      '<div class="card"><div class="shint" style="font-size:12px">Why "qualified"? It keeps the rewards fair and bot-proof. A friend counts only after they stick around and genuinely use OpenBook, not the moment they sign up. Rewards are perks only and never affect anyone\'s feed ranking or votes.</div></div>';
+      '<div class="card"><div class="shint" style="font-size:12px">Why "qualified"? It keeps the rewards fair and bot-proof. A friend counts only after they stick around and genuinely use Nexora, not the moment they sign up. Rewards are perks only and never affect anyone\'s feed ranking or votes.</div></div>';
 
     const copyBtn = view.querySelector('#copyInvite');
     copyBtn.onclick = async () => {
@@ -1838,7 +1838,7 @@
 
     view.innerHTML =
       '<div class="card"><div class="pname">Professional dashboard</div>' +
-      '<div class="shint" style="font-size:13px">Your reputation, activity, and content analytics on OpenBook, fully in the open.</div></div>' +
+      '<div class="shint" style="font-size:13px">Your reputation, activity, and content analytics on Nexora, fully in the open.</div></div>' +
       '<div class="section-title">Content analytics</div>' +
       '<div class="dash-grid">' +
         statCard(a.totals.views, 'Views / reach', 'Times your posts were opened by others.') +
@@ -1864,9 +1864,9 @@
         statCard(s.reactionsReceived, 'Reactions received', '') +
       '</div>' +
       storageSection(d.storage, d.supporter) +
-      '<div class="card"><div class="section-title">How OpenBook scoring works</div>' +
+      '<div class="card"><div class="section-title">How Nexora scoring works</div>' +
       '<div class="shint" style="font-size:13px;line-height:1.6">' +
-      'OpenBook keeps two separate scores on purpose. <b>Karma</b> moves with community votes and only changes where your content ranks. ' +
+      'Nexora keeps two separate scores on purpose. <b>Karma</b> moves with community votes and only changes where your content ranks. ' +
       'It can go negative and it never hides your posts. <b>Standing</b> is your safety score: it goes up with account age and clean activity, ' +
       'and only confirmed rule violations bring it down. Standing, not votes, is what controls your reach. So you can hold an unpopular ' +
       'opinion, collect downvotes, and still be seen, as long as your standing is healthy. The ranking and reputation rules are published ' +
@@ -1901,7 +1901,7 @@
         '<div style="height:10px;border-radius:6px;background:var(--line,#2a2a2a);overflow:hidden">' +
           '<div style="height:100%;width:' + pct + '%;background:' + barColor + ';border-radius:6px;transition:width .4s"></div>' +
         '</div>' +
-        '<div class="shint" style="font-size:12px;margin-top:8px">The space your photos take on OpenBook servers. Delete old posts or photos to free up room' +
+        '<div class="shint" style="font-size:12px;margin-top:8px">The space your photos take on Nexora servers. Delete old posts or photos to free up room' +
           (atMax ? '.' : ', or upgrade your supporter tier for more space.') + '</div>' +
       '</div>'
     );
@@ -2375,7 +2375,7 @@
       '</div>'
     );
     const copy = m.q('#shCopy');
-    if (copy) copy.onclick = () => { shareLink(postShareUrl(p.id), 'OpenBook post'); m.close(); };
+    if (copy) copy.onclick = () => { shareLink(postShareUrl(p.id), 'Nexora post'); m.close(); };
     const rp = m.q('#shRepost');
     if (rp) rp.onclick = async () => {
       rp.disabled = true;
@@ -2684,7 +2684,7 @@
     } catch (e) {}
   }
 
-  // "Follow OpenBook" discovery card in the right rail, so the official account is easy
+  // "Follow Nexora" discovery card in the right rail, so the official account is easy
   // to find. It links to the account's profile and disappears once you follow it (after
   // that, its posts arrive in your feed). Never shown to the account itself.
   async function renderOfficialFollowCard() {
@@ -2696,7 +2696,7 @@
       const u = r.user;
       host.innerHTML =
         '<div class="card ob-follow">' +
-        '<div class="section-title">Follow OpenBook</div>' +
+        '<div class="section-title">Follow Nexora</div>' +
         '<div class="ob-follow-row">' +
         '<span class="ob-follow-id" data-go-official>' +
         '<span class="avatar-link">' + avatar(u, 40) + '</span>' +
@@ -2711,7 +2711,7 @@
       if (btn) btn.onclick = async (e) => {
         e.stopPropagation();
         btn.disabled = true;
-        try { await API.follow(u.id); toast('You are now following OpenBook'); host.innerHTML = ''; }
+        try { await API.follow(u.id); toast('You are now following Nexora'); host.innerHTML = ''; }
         catch (err) { btn.disabled = false; toast(err.message); }
       };
     } catch (e) { host.innerHTML = ''; }
@@ -2842,7 +2842,7 @@
   // Who-can-see-my-profile control. The three levels gate the profile page + wall
   // server-side; this is the owner's button + the explain-and-approve modal.
   var VIS_META = {
-    public: { icon: '&#127760;', label: 'Public', desc: 'Anyone on OpenBook can see your profile and your public posts. Best for reaching the most people.' },
+    public: { icon: '&#127760;', label: 'Public', desc: 'Anyone on Nexora can see your profile and your public posts. Best for reaching the most people.' },
     friends: { icon: '&#128101;', label: 'Friends only', desc: 'Only people you have accepted as friends can see your profile and posts. Everyone else just sees your name and photo.' },
     private: { icon: '&#128274;', label: 'Private', desc: 'Only you can see your profile and posts. Nobody else, not even your friends, can open it.' },
   };
@@ -2884,7 +2884,7 @@
   function profileActions(data) {
     const u = data.user;
     const share = ' <button class="btn btn-icon" data-share-profile="' + esc((u.username || u.id) + '') + '" title="Share profile" aria-label="Share profile">&#128279;</button>';
-    // The official OpenBook account is an automated account: you follow it, you do not
+    // The official Nexora account is an automated account: you follow it, you do not
     // send it a friend request or message it. Show only Follow (and Share), never the
     // friend actions. (Friend requests to it are also blocked server-side.)
     if (u.official && data.friendStatus !== 'self') return followBtn(data).trim() + share;
@@ -2920,7 +2920,7 @@
     var safe = esc(raw);
     if (u && u.bioLinks) {
       // Linkify full URLs (http/https), www.* links, AND bare domains like
-      // "openbook.space/x" so a supporter does not have to type "https://".
+      // "nexora.shalter.ru/x" so a supporter does not have to type "https://".
       var re = /(\bhttps?:\/\/[^\s<]+)|(\bwww\.[^\s<]+)|(\b[a-z0-9][a-z0-9-]*\.(?:com|net|org|io|co|me|app|dev|xyz|space|ai|gg|tv|info|biz|link|site|online|store|shop|page|live|vn|uk|us)(?:\/[^\s<]*)?)/gi;
       safe = safe.replace(re, function (m) {
         var href = /^https?:\/\//i.test(m) ? m : 'https://' + m;
@@ -3247,7 +3247,7 @@
         ('<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
          '<div class="shint" style="font-size:12px;margin-bottom:8px">Sign-in methods</div>' +
          (passkeyOn
-           ? ('<div class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Passkeys let you sign in with your fingerprint, face, or device PIN. Your biometric never leaves your device, OpenBook only stores a public key.</div>' +
+           ? ('<div class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Passkeys let you sign in with your fingerprint, face, or device PIN. Your biometric never leaves your device, Nexora only stores a public key.</div>' +
               '<div id="epPasskeyList" class="passkey-list"></div>' +
               '<button class="btn btn-soft btn-block" id="epAddPasskey"' + (googleOn ? ' style="margin-bottom:10px"' : '') + '>Add a passkey</button>')
            : '') +
@@ -3271,15 +3271,15 @@
       (pushOn ?
         ('<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
          '<div class="shint" style="font-size:12px;margin-bottom:8px">Notifications</div>' +
-         '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 10px">Get notified of new messages with a sound and a red count on the OpenBook app icon, even when OpenBook is closed. It stays off until you turn it on here, and you can turn it off any time. Notifications never affect your karma, standing, or reach.</p>' +
+         '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 10px">Get notified of new messages with a sound and a red count on the Nexora app icon, even when Nexora is closed. It stays off until you turn it on here, and you can turn it off any time. Notifications never affect your karma, standing, or reach.</p>' +
          '<div class="push-guide">' +
            '<div class="push-guide-title">How to turn it on</div>' +
            '<ol class="push-guide-steps">' +
-             '<li><strong>On your phone, add OpenBook to your home screen first.</strong> On iPhone, tap the Share icon in Safari, then Add to Home Screen. On Android, tap Install when your browser offers it.</li>' +
-             '<li>Open OpenBook from that new home-screen icon (not the browser tab).</li>' +
+             '<li><strong>On your phone, add Nexora to your home screen first.</strong> On iPhone, tap the Share icon in Safari, then Add to Home Screen. On Android, tap Install when your browser offers it.</li>' +
+             '<li>Open Nexora from that new home-screen icon (not the browser tab).</li>' +
              '<li>Tap the button below and choose Allow when your phone asks.</li>' +
            '</ol>' +
-           '<div class="push-guide-note">On a computer you can skip step 1: just tap the button and allow. iPhone needs iOS 16.4 or newer, and notifications only work from the home-screen app, not a Safari tab. If you ever tapped Block by mistake, re-allow notifications for OpenBook in your browser site settings.</div>' +
+           '<div class="push-guide-note">On a computer you can skip step 1: just tap the button and allow. iPhone needs iOS 16.4 or newer, and notifications only work from the home-screen app, not a Safari tab. If you ever tapped Block by mistake, re-allow notifications for Nexora in your browser site settings.</div>' +
          '</div>' +
          '<button class="btn btn-soft btn-block" id="epPushBtn" style="margin-top:12px">Turn on message notifications</button>' +
          '<div id="epPushMsg" class="shint" style="font-size:12px;margin-top:8px"></div>' +
@@ -3287,7 +3287,7 @@
         : '') +
       '<div style="margin-top:18px;padding-top:14px;border-top:1px solid var(--line,#2a2a2a)">' +
       '<div class="shint" style="font-size:12px;margin-bottom:6px">Your data</div>' +
-      '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Download everything OpenBook holds about you. Your data is yours, and it is never sold.</p>' +
+      '<p class="shint" style="font-size:12px;line-height:1.5;margin:0 0 8px">Download everything Nexora holds about you. Your data is yours, and it is never sold.</p>' +
       '<button class="btn btn-soft btn-block" id="epExportJson" style="margin-bottom:8px">Download my data (JSON)</button>' +
       '<button class="btn btn-soft btn-block" id="epExportZip">Download everything (ZIP, includes media)</button>' +
       '<div id="epExportStatus" class="shint" style="font-size:12px;margin-top:8px"></div>' +
@@ -3406,7 +3406,7 @@
         if (!pushSupported()) {
           if (pwaIosSafari()) {
             _pushBtn.style.display = 'none';
-            _pushMsg.innerHTML = 'On iPhone or iPad, first add OpenBook to your Home Screen (Share, then <strong>Add to Home Screen</strong>), open it from there, and this option appears.';
+            _pushMsg.innerHTML = 'On iPhone or iPad, first add Nexora to your Home Screen (Share, then <strong>Add to Home Screen</strong>), open it from there, and this option appears.';
           } else {
             _pushBtn.disabled = true;
             _pushBtn.textContent = 'Not supported on this browser';
@@ -3416,7 +3416,7 @@
         var perm = Notification.permission;
         if (perm === 'denied') {
           _pushBtn.disabled = true; _pushBtn.textContent = 'Notifications are blocked';
-          _pushMsg.innerHTML = 'You blocked notifications for OpenBook. Re-allow them in your browser site settings to turn them on.';
+          _pushMsg.innerHTML = 'You blocked notifications for Nexora. Re-allow them in your browser site settings to turn them on.';
           return;
         }
         var reg = await pushRegistration();
@@ -3492,7 +3492,7 @@
   async function renderSuggestions() {
     view.innerHTML =
       '<div class="card"><div class="pname">&#128161; Suggestions</div>' +
-      '<div class="shint" style="font-size:13px;line-height:1.5">Suggest a fix, update, or change to OpenBook. Everyone votes, and the most upvoted ideas rise to the top. The most-wanted each week get built first. This is the community deciding what we build, in the open.</div></div>' +
+      '<div class="shint" style="font-size:13px;line-height:1.5">Suggest a fix, update, or change to Nexora. Everyone votes, and the most upvoted ideas rise to the top. The most-wanted each week get built first. This is the community deciding what we build, in the open.</div></div>' +
       '<div class="card">' +
         '<div class="field"><input class="input" id="sugTitle" maxlength="140" placeholder="Your idea (a fix, update, or change)"></div>' +
         '<div class="field"><textarea class="input" id="sugBody" rows="2" maxlength="2000" placeholder="Add details (optional)"></textarea></div>' +
@@ -3636,7 +3636,7 @@
     _convoActiveId = activeId || null;
     try {
       const r = await API.conversations();
-      // The official OpenBook account is always pinned to the top of the list so its
+      // The official Nexora account is always pinned to the top of the list so its
       // messages are easy to find without searching. Everyone else keeps recent-first
       // order (a stable sort preserves it).
       _convos = (r.conversations || []).slice().sort((a, b) => (b.user.official ? 1 : 0) - (a.user.official ? 1 : 0));
@@ -3646,7 +3646,7 @@
   }
 
   // Render the conversation list, optionally filtered by a search term (matches the
-  // other person's name or @username). Pinned OpenBook only filters out when searching.
+  // other person's name or @username). Pinned Nexora only filters out when searching.
   function renderConvoList(filter) {
     const list = document.getElementById('convoList');
     if (!list) return;
@@ -3703,7 +3703,7 @@
         : '<div class="mfoot"><input id="msgInput" placeholder="Type a message..." autocomplete="off"><button class="btn btn-primary" id="msgSend">Send</button></div>');
 
     const body = document.getElementById('mbody');
-    // The official OpenBook thread leads with the tap-to-go onboarding checklist.
+    // The official Nexora thread leads with the tap-to-go onboarding checklist.
     if (u.official) body.appendChild(onboardingCard());
     data.messages.forEach((m) => body.appendChild(msgBubble(m)));
     if (u.official) body.scrollTop = 0; else scrollBottom(body);
@@ -3715,7 +3715,7 @@
     back.style.display = window.innerWidth <= 980 ? 'inline-flex' : 'none';
     back.onclick = () => messenger.classList.remove('show-thread');
 
-    // The official OpenBook thread has no composer (it is a read-only automated
+    // The official Nexora thread has no composer (it is a read-only automated
     // account), so wire the input only when it is actually present.
     const input = document.getElementById('msgInput');
     if (input) {
@@ -3813,7 +3813,7 @@
     })();
   }
 
-  // The interactive onboarding checklist shown at the top of the official OpenBook
+  // The interactive onboarding checklist shown at the top of the official Nexora
   // conversation: one tap on each row jumps straight to that part of the platform.
   function onboardingCard() {
     const steps = [
@@ -3824,9 +3824,9 @@
       { ic: '&#127881;', t: 'Invite friends', s: 'Every 5 friends who join unlock Premium for you.', act: () => go('invite') },
       { ic: '&#128161;', t: 'Share a suggestion', s: 'The most upvoted ideas get built first, in the open.', act: () => go('suggestions') },
       { ic: '&#127760;', t: 'Start or join a community', s: 'Gather people around something you love.', act: () => go('communities') },
-      { ic: '&#10084;&#65039;', t: 'Support OpenBook', s: 'Keep us ad-free and independent. Totally optional.', act: () => go('support') },
+      { ic: '&#10084;&#65039;', t: 'Support Nexora', s: 'Keep us ad-free and independent. Totally optional.', act: () => go('support') },
     ];
-    const card = el('<div class="onboard-card"><div class="onboard-h">&#128640; Get started on OpenBook</div><div class="onboard-steps"></div></div>');
+    const card = el('<div class="onboard-card"><div class="onboard-h">&#128640; Get started on Nexora</div><div class="onboard-steps"></div></div>');
     const wrap = card.querySelector('.onboard-steps');
     steps.forEach((st) => {
       const row = el('<button class="onboard-step"><span class="oi">' + st.ic + '</span>' +
@@ -4029,7 +4029,7 @@
       '<div class="field"><label>Location (optional)</label><input class="input" id="slLoc" placeholder="City or area"></div>' +
       '<div class="field"><label>Description</label><textarea class="input" id="slDesc" rows="3" placeholder="Describe your item"></textarea></div>' +
       (cfg.enabled
-        ? '<label style="display:flex;align-items:flex-start;gap:8px;margin:0 0 6px;font-size:13px;line-height:1.5;cursor:pointer"><input type="checkbox" id="slEscrow" checked style="margin-top:3px;flex:none"><span>Offer <strong>escrow buyer protection</strong>. OpenBook holds the payment until the buyer confirms they got the item, with a ' + cfg.feePct + '% fee on a completed sale. For items up to $' + (cfg.maxAmount || 1000).toLocaleString() + '; bigger items (cars, property) are sold face to face.</span></label>' +
+        ? '<label style="display:flex;align-items:flex-start;gap:8px;margin:0 0 6px;font-size:13px;line-height:1.5;cursor:pointer"><input type="checkbox" id="slEscrow" checked style="margin-top:3px;flex:none"><span>Offer <strong>escrow buyer protection</strong>. Nexora holds the payment until the buyer confirms they got the item, with a ' + cfg.feePct + '% fee on a completed sale. For items up to $' + (cfg.maxAmount || 1000).toLocaleString() + '; bigger items (cars, property) are sold face to face.</span></label>' +
           '<div class="shint" id="slEscrowNote" style="font-size:12px;margin:0 0 12px;display:none">Over $' + (cfg.maxAmount || 1000).toLocaleString() + ', so this item is face to face only (no escrow).</div>'
         : '') +
       '<div class="field"><input type="file" id="slImg" accept="image/*" class="input"></div>' +
@@ -4089,7 +4089,7 @@
       '<div class="mh"><h3>&#128274; Buy with escrow protection</h3></div><div class="mc">' +
       '<div style="font-weight:700;font-size:16px;margin-bottom:2px">' + esc(listing.title) + '</div>' +
       '<div class="mk-price" style="font-size:22px">' + money(listing.price) + '</div>' +
-      '<div class="shint" style="font-size:13px;line-height:1.6;margin:10px 0">OpenBook holds your payment safely and only releases it to the seller once <strong>you confirm you received the item and it is as described</strong>. If something goes wrong, you open a dispute and an OpenBook admin reviews the evidence from both sides and decides. This protects you both, whether it is shipped or handed over in person.</div>' +
+      '<div class="shint" style="font-size:13px;line-height:1.6;margin:10px 0">Nexora holds your payment safely and only releases it to the seller once <strong>you confirm you received the item and it is as described</strong>. If something goes wrong, you open a dispute and an Nexora admin reviews the evidence from both sides and decides. This protects you both, whether it is shipped or handed over in person.</div>' +
       '<div style="background:var(--hover);border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.7;margin-bottom:10px">' +
         'Item price <span style="float:right;font-weight:700">' + money(listing.price) + '</span><br>' +
         'Platform fee (' + cfg.feePct + '%) <span style="float:right;font-weight:700">' + money(fee) + '</span><br>' +

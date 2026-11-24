@@ -1,5 +1,5 @@
 // public/js/p2p.js
-// Opportunistic peer-to-peer OFFLOAD for OpenBook video, browser side.
+// Opportunistic peer-to-peer OFFLOAD for Nexora video, browser side.
 //
 // Read this before wiring it up, because the honest design here is deliberately
 // narrower than "serve everything over IPFS":

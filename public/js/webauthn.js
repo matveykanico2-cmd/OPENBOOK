@@ -67,7 +67,7 @@
     return await API.passkeyRegisterVerify(out, label || '');
   }
 
-  // Passwordless login: the device offers its saved OpenBook passkeys; the chosen one
+  // Passwordless login: the device offers its saved Nexora passkeys; the chosen one
   // signs the challenge. Returns the API response ({ user }).
   async function login(fp) {
     if (!supported()) throw new Error('This browser does not support passkeys.');

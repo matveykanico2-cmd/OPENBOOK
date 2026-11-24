@@ -1,6 +1,6 @@
-// sw.js. OpenBook service worker.
+// sw.js. Nexora service worker.
 //
-// Intentionally minimal. It exists so OpenBook is installable as a PWA (an app on
+// Intentionally minimal. It exists so Nexora is installable as a PWA (an app on
 // the home screen), but it deliberately does NOT cache app code or API responses.
 // That means a deploy is never served stale and your session is never cached: every
 // request passes straight through to the network exactly as without a worker.
@@ -35,7 +35,7 @@ self.addEventListener('activate', (event) => {
 // the browser handles every request normally (network, with no SW caching).
 self.addEventListener('fetch', () => { /* network passthrough, no caching */ });
 
-// --- Web Push: a new direct message while OpenBook is closed or backgrounded ---
+// --- Web Push: a new direct message while Nexora is closed or backgrounded ---
 // The server only sends a push when the recipient has no live connection (see
 // sockets.js), so here we always show the notification (its arrival is also what
 // makes the phone play its notification sound) and set the red count badge on the
@@ -44,8 +44,8 @@ self.addEventListener('fetch', () => { /* network passthrough, no caching */ });
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch (e) { data = {}; }
-  const title = data.title || 'OpenBook';
-  const body = data.body || 'You have a new message on OpenBook.';
+  const title = data.title || 'Nexora';
+  const body = data.body || 'You have a new message on Nexora.';
   const url = data.url || '/app';
   event.waitUntil((async () => {
     // Reflect the unread-message count on the app-icon badge where supported.
@@ -66,7 +66,7 @@ self.addEventListener('push', (event) => {
   })());
 });
 
-// Tapping the notification focuses an existing OpenBook window (or opens one) and
+// Tapping the notification focuses an existing Nexora window (or opens one) and
 // takes it to Messages.
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

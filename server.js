@@ -1,5 +1,5 @@
 // server.js
-// OpenBook entry point. Sets up Express, static files, the JSON API routes,
+// Nexora entry point. Sets up Express, static files, the JSON API routes,
 // and the Socket.IO server for real time chat and live notifications.
 
 const path = require('path');
@@ -165,7 +165,7 @@ function sendPublicPage(res, file, opts) {
   let html = stampedPage(file);
   if (html == null) return res.status(404).end();
   opts = opts || {};
-  if (opts.title) html = html.replace('<title>OpenBook</title>', '<title>' + require('./publicview').esc(opts.title) + '</title>');
+  if (opts.title) html = html.replace('<title>Nexora</title>', '<title>' + require('./publicview').esc(opts.title) + '</title>');
   let head = '';
   if (opts.robots) head += '    <meta name="robots" content="' + opts.robots + '">\n';
   if (opts.og) head += '    ' + opts.og + '\n';
@@ -466,8 +466,8 @@ function publicPostPrerender(post, base) {
   const comments = (post.comments || []).slice(0, 20).map((c) =>
     '<div class="pp-comment"><b>' + e(c.author && c.author.name) + '</b> ' + e(c.content) + '</div>').join('');
   return '<div class="public-shell">' +
-    '<div class="pub-cta"><span><b>OpenBook</b> is a social network where money never buys reach and the community decides. Read freely.</span>' +
-    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<div class="pub-cta"><span><b>Nexora</b> is a social network where money never buys reach and the community decides. Read freely.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join Nexora</a></div>' +
     '<article class="card post pp-post">' +
     '<div class="post-head"><div class="meta"><div class="name">' + authorLink + commLink + '</div>' +
     (a.username ? '<div class="time">@' + e(a.username) + '</div>' : '') + '</div></div>' +
@@ -475,7 +475,7 @@ function publicPostPrerender(post, base) {
     '<div class="pp-stats">&#9650; ' + (post.score || 0) + ' &#183; ' + (post.commentCount || 0) + ' comments</div>' +
     '</article>' +
     (comments ? '<div class="card pp-comments"><div class="section-title">Comments</div>' + comments + '</div>' : '') +
-    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to reply, vote, and post</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join Nexora to reply, vote, and post</a> <a class="btn" href="/explore">Explore Nexora</a></div>' +
     '</div>';
 }
 function publicProfilePrerender(data, base) {
@@ -483,14 +483,14 @@ function publicProfilePrerender(data, base) {
   const posts = (data.posts || []).slice(0, 10).map((p) =>
     '<a class="card post pp-linkcard" href="/p/' + p.id + '"><div class="post-body">' + e(p.title || p.content || '(view post)') + '</div></a>').join('');
   return '<div class="public-shell">' +
-    '<div class="pub-cta"><span><b>' + e(u.name) + '</b> is on OpenBook, the social network where money never buys reach.</span>' +
-    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<div class="pub-cta"><span><b>' + e(u.name) + '</b> is on Nexora, the social network where money never buys reach.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join Nexora</a></div>' +
     '<div class="card"><h1 class="pp-title">' + e(u.name) + '</h1>' +
     (u.username ? '<div class="time">@' + e(u.username) + '</div>' : '') +
     (u.bio ? '<div class="profile-bio">' + e(u.bio) + '</div>' : '') +
     '<div class="pp-stats">' + (data.followersCount || 0) + ' followers &#183; ' + (data.postsCount || 0) + ' public posts</div></div>' +
     posts +
-    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join OpenBook to follow and message</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join Nexora to follow and message</a> <a class="btn" href="/explore">Explore Nexora</a></div>' +
     '</div>';
 }
 function publicCommunityPrerender(data, base) {
@@ -501,24 +501,24 @@ function publicCommunityPrerender(data, base) {
       (a.name ? '<div class="time">by ' + e(a.name) + '</div>' : '') + '</a>';
   }).join('') || '<div class="card"><div class="empty">No public posts here yet.</div></div>';
   return '<div class="public-shell">' +
-    '<div class="pub-cta"><span>o/<b>' + e(c.name) + '</b> on OpenBook, where money never buys reach and the community decides.</span>' +
-    '<a class="btn btn-primary btn-sm" href="/">Join OpenBook</a></div>' +
+    '<div class="pub-cta"><span>o/<b>' + e(c.name) + '</b> on Nexora, where money never buys reach and the community decides.</span>' +
+    '<a class="btn btn-primary btn-sm" href="/">Join Nexora</a></div>' +
     '<div class="card"><h1 class="pp-title">o/' + e(c.name) + '</h1>' +
     (c.description ? '<div class="profile-bio">' + e(c.description) + '</div>' : '') +
     '<div class="pp-stats">' + (data.memberCount || 0) + ' members &#183; ' + (data.posts || []).length + ' recent posts</div></div>' +
     posts +
-    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join o/' + e(c.name) + '</a> <a class="btn" href="/explore">Explore OpenBook</a></div>' +
+    '<div class="pub-foot"><a class="btn btn-primary" href="/">Join o/' + e(c.name) + '</a> <a class="btn" href="/explore">Explore Nexora</a></div>' +
     '</div>';
 }
 function explorePrerender(posts, communities, usernames, base) {
   const e = pubview.esc;
-  const postList = posts.slice(0, 40).map((p) => '<li><a href="/p/' + p.id + '">' + e(String(p.title || p.content || 'A post on OpenBook').slice(0, 90)) + '</a></li>').join('');
+  const postList = posts.slice(0, 40).map((p) => '<li><a href="/p/' + p.id + '">' + e(String(p.title || p.content || 'A post on Nexora').slice(0, 90)) + '</a></li>').join('');
   const commList = communities.slice(0, 50).map((c) => '<li><a href="/c/' + e(c.name) + '">o/' + e(c.name) + '</a>' + (c.description ? ' <span class="muted">' + e(String(c.description).slice(0, 60)) + '</span>' : '') + '</li>').join('');
   const peopleList = usernames.slice(0, 60).map((u) => '<li><a href="/u/' + e(u) + '">@' + e(u) + '</a></li>').join('');
   return '<div class="public-shell explore">' +
-    '<div class="card"><h1 class="pp-title">Explore OpenBook</h1>' +
+    '<div class="card"><h1 class="pp-title">Explore Nexora</h1>' +
     '<div class="profile-bio">A social network where money never buys reach, your data is never sold, and the community decides what rises. Browse public posts, communities, and people below, then join in.</div>' +
-    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a></p></div>' +
+    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join Nexora</a></p></div>' +
     (commList ? '<div class="card"><h2 class="section-title">Communities</h2><ul class="explore-list">' + commList + '</ul></div>' : '') +
     (postList ? '<div class="card"><h2 class="section-title">Recent public posts</h2><ul class="explore-list">' + postList + '</ul></div>' : '') +
     (peopleList ? '<div class="card"><h2 class="section-title">People</h2><ul class="explore-list">' + peopleList + '</ul></div>' : '') +
@@ -537,9 +537,9 @@ function updatesPrerender(base) {
       '<div class="post-body">' + e(clean) + '</div></article>';
   }).join('');
   return '<div class="public-shell">' +
-    '<div class="card"><h1 class="pp-title">What is new on OpenBook</h1>' +
+    '<div class="card"><h1 class="pp-title">What is new on Nexora</h1>' +
     '<div class="profile-bio">Every change we ship is posted in the open. Here is the running log.</div>' +
-    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join OpenBook</a> <a class="btn" href="/explore">Explore</a></p></div>' +
+    '<p style="margin-top:12px"><a class="btn btn-primary" href="/">Join Nexora</a> <a class="btn" href="/explore">Explore</a></p></div>' +
     items + '</div>';
 }
 
@@ -549,10 +549,10 @@ app.get('/u/:handle', publicReadLimiter, async (req, res) => {
     if (data) {
       const base = reqBase(req); const u = data.user;
       const canonical = base + '/u/' + encodeURIComponent(u.username || u.id);
-      const title = u.name + (u.username ? ' (@' + u.username + ')' : '') + ' on OpenBook';
-      const desc = u.bio || (u.name + ' is on OpenBook, the social network where money never buys reach and the community decides.');
+      const title = u.name + (u.username ? ' (@' + u.username + ')' : '') + ' on Nexora';
+      const desc = u.bio || (u.name + ' is on Nexora, the social network where money never buys reach and the community decides.');
       return sendPublicPage(res, APP_HTML, {
-        title: title + ' | OpenBook',
+        title: title + ' | Nexora',
         og: pubview.ogMeta({ title, description: desc, url: canonical, canonical, image: pubview.absUrl(base, u.avatar), type: 'profile', base }),
         jsonLd: pubview.profileJsonLd(data, canonical, base),
         robots: (data.posts || []).length ? undefined : 'noindex,follow',
@@ -569,10 +569,10 @@ app.get('/p/:id', publicReadLimiter, async (req, res) => {
       const base = reqBase(req); const a = post.author || {};
       const canonical = base + '/p/' + post.id;
       const snippet = String(post.content || '').replace(/\s+/g, ' ').trim().slice(0, 65);
-      const title = post.title || (snippet ? (snippet + (String(post.content || '').length > 65 ? '...' : '')) : ((a.name || 'Someone') + ' on OpenBook'));
-      const desc = post.content || post.title || 'Join the conversation on OpenBook.';
+      const title = post.title || (snippet ? (snippet + (String(post.content || '').length > 65 ? '...' : '')) : ((a.name || 'Someone') + ' on Nexora'));
+      const desc = post.content || post.title || 'Join the conversation on Nexora.';
       return sendPublicPage(res, APP_HTML, {
-        title: title + ' | OpenBook',
+        title: title + ' | Nexora',
         og: pubview.ogMeta({ title, description: desc, url: canonical, canonical, image: pubview.absUrl(base, post.image), type: 'article', base, published: post.created_at, authorName: a.name }),
         jsonLd: pubview.postJsonLd(post, canonical, base),
         robots: pubview.isThinPost(post) ? 'noindex,follow' : undefined,
@@ -588,8 +588,8 @@ app.get('/c/:name', publicReadLimiter, async (req, res) => {
     if (data) {
       const base = reqBase(req); const c = data.community;
       const canonical = base + '/c/' + encodeURIComponent(c.name);
-      const title = 'o/' + c.name + (c.description ? ' - ' + c.description : '') + ' | OpenBook';
-      const desc = c.description || ('o/' + c.name + ' on OpenBook, the social network where money never buys reach and the community decides.');
+      const title = 'o/' + c.name + (c.description ? ' - ' + c.description : '') + ' | Nexora';
+      const desc = c.description || ('o/' + c.name + ' on Nexora, the social network where money never buys reach and the community decides.');
       return sendPublicPage(res, APP_HTML, {
         title,
         og: pubview.ogMeta({ title: 'o/' + c.name, description: desc, url: canonical, canonical, type: 'website', base }),
@@ -609,8 +609,8 @@ app.get('/explore', publicReadLimiter, async (req, res) => {
     const [posts, communities, sm] = await Promise.all([pubview.publicDiscover(40), pubview.publicCommunities(50), pubview.sitemapEntries()]);
     const canonical = base + '/explore';
     return sendPublicPage(res, APP_HTML, {
-      title: 'Explore OpenBook | public posts, communities, and people',
-      og: pubview.ogMeta({ title: 'Explore OpenBook', description: 'Browse public posts, communities, and people on OpenBook, the social network where money never buys reach and the community decides.', url: canonical, canonical, type: 'website', base }),
+      title: 'Explore Nexora | public posts, communities, and people',
+      og: pubview.ogMeta({ title: 'Explore Nexora', description: 'Browse public posts, communities, and people on Nexora, the social network where money never buys reach and the community decides.', url: canonical, canonical, type: 'website', base }),
       prerender: explorePrerender(posts, communities, sm.usernames || [], base),
     });
   } catch (e) { logger.warn({ err: e }, 'explore render failed'); sendPage(res, APP_HTML); }
@@ -620,8 +620,8 @@ app.get('/updates', publicReadLimiter, (req, res) => {
   const base = reqBase(req);
   const canonical = base + '/updates';
   sendPublicPage(res, APP_HTML, {
-    title: 'What is new on OpenBook | product updates',
-    og: pubview.ogMeta({ title: 'What is new on OpenBook', description: 'Every change OpenBook ships, in the open: new features, fixes, and improvements to the social network where money never buys reach.', url: canonical, canonical, type: 'website', base }),
+    title: 'What is new on Nexora | product updates',
+    og: pubview.ogMeta({ title: 'What is new on Nexora', description: 'Every change Nexora ships, in the open: new features, fixes, and improvements to the social network where money never buys reach.', url: canonical, canonical, type: 'website', base }),
     prerender: updatesPrerender(base),
   });
 });
@@ -724,7 +724,7 @@ const PORT = process.env.PORT || 3000;
 require('./db').init()
   .then(() => {
     server.listen(PORT, () => {
-      logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'OpenBook server started');
+      logger.info({ port: PORT, env: process.env.NODE_ENV || 'development' }, 'Nexora server started');
       // Phase 5: start the background vote-ring scan (no-op if SYBIL_JOB=0).
       try { require('./antisybil').startSybilJobs(); } catch (e) { logger.error({ err: e }, 'failed to start sybil jobs'); }
       // Referral: qualify pending referrals + pay rewards on a schedule.
@@ -734,13 +734,13 @@ require('./db').init()
       try { require('./media/cleanup').startStoryCleanupJob(); } catch (e) { logger.error({ err: e }, 'failed to start story cleanup job'); }
       // Data export: sweep expired export artifacts so they never accumulate.
       try { require('./export').startExportCleanupJob(); } catch (e) { logger.error({ err: e }, 'failed to start export cleanup job'); }
-      // Onboarding: send the OpenBook welcome message to any existing member who has
+      // Onboarding: send the Nexora welcome message to any existing member who has
       // not received it yet (idempotent, runs in the background, never re-sends).
       try { require('./welcome').backfillWelcomes().catch((e) => logger.warn({ err: e }, 'welcome backfill failed')); } catch (e) { logger.error({ err: e }, 'failed to start welcome backfill'); }
       // Cleanup: permanently remove accounts that never verified their email within
       // the grace window (only runs while email verification is enforced).
       try { require('./unverified-cleanup').startUnverifiedCleanupJob(); } catch (e) { logger.error({ err: e }, 'failed to start unverified cleanup job'); }
-      // Publish any new OpenBook changelog posts (idempotent), so followers see what
+      // Publish any new Nexora changelog posts (idempotent), so followers see what
       // shipped on the official account's public feed.
       try { require('./changelog').publishChangelog().catch((e) => logger.warn({ err: e }, 'changelog publish failed')); } catch (e) { logger.error({ err: e }, 'failed to publish changelog'); }
       // Roadmap: reconcile linked GitHub issues (no-op unless GITHUB_TOKEN is set).

@@ -1,7 +1,7 @@
 {
-  "name": "openbook",
+  "name": "nexora",
   "version": "1.0.0",
-  "description": "OpenBook, an open-source social network: profiles, feed, posts, friends, chat, stories, marketplace, groups, albums",
+  "description": "Nexora, an open-source social network: profiles, feed, posts, friends, chat, stories, marketplace, groups, albums",
   "license": "AGPL-3.0-or-later",
   "main": "server.js",
   "engines": {

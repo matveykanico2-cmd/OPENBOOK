@@ -1,4 +1,4 @@
-/* OpenBook design system.
+/* Nexora design system.
    Own brand identity: a fresh indigo on a clean light-gray chrome,
    with a familiar social layout (top bar, feed, side rails). */
 
@@ -1015,7 +1015,7 @@ html[data-theme="dark"] .profile-head .pname { color: var(--text); }
 .person .pn { font-weight: 700; margin: 10px 8px 2px; cursor: pointer; }
 .person .phandle { color: var(--text-soft); font-size: 12.5px; margin: 0 8px 8px; }
 .person .pb { padding: 0 10px; display: flex; flex-direction: column; gap: 6px; }
-/* "Follow OpenBook" discovery card in the right rail. */
+/* "Follow Nexora" discovery card in the right rail. */
 .ob-follow .ob-follow-row { display: flex; align-items: center; gap: 10px; }
 .ob-follow .ob-follow-id { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; cursor: pointer; }
 .ob-follow .ob-follow-meta { display: flex; flex-direction: column; min-width: 0; }
@@ -1037,7 +1037,7 @@ html[data-theme="dark"] .profile-head .pname { color: var(--text); }
 }
 /* Golden ring around the founder's avatar (cosmetic). */
 .av-gold { box-shadow: 0 0 0 2px var(--card, #fff), 0 0 0 4px #f5b301, 0 0 0 6px rgba(245,179,1,0.28); }
-/* The official OpenBook account: brand "O" mark + an Official badge. */
+/* The official Nexora account: brand "O" mark + an Official badge. */
 .avatar-official { display: inline-flex; align-items: center; justify-content: center; flex: none; background: var(--brand); color: #fff; border-radius: 30%; font-weight: 800; line-height: 1; }
 .official-badge { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 800; line-height: 1; padding: 2px 7px; border-radius: 999px; vertical-align: middle; color: #fff; background: var(--brand); white-space: nowrap; }
 
@@ -1240,7 +1240,7 @@ html[data-theme="dark"] .profile-head .pname { color: var(--text); }
 .msg-editor { display: flex; flex-direction: column; gap: 6px; min-width: 230px; }
 .msg-edit-input { width: 100%; resize: vertical; border-radius: 10px; border: 1px solid var(--line); padding: 7px 9px; font: inherit; background: var(--bg); color: var(--text); }
 .msg-edit-actions { display: flex; gap: 6px; justify-content: flex-end; }
-/* Onboarding checklist card in the official OpenBook conversation */
+/* Onboarding checklist card in the official Nexora conversation */
 .onboard-card { align-self: stretch; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 8px; box-shadow: var(--shadow); }
 .onboard-h { font-weight: 800; font-size: 15px; margin: 2px 2px 10px; }
 .onboard-steps { display: flex; flex-direction: column; gap: 7px; }

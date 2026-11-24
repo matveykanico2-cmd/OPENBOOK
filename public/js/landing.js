@@ -17,7 +17,7 @@
         google_failed: 'Google sign-in did not complete. Please try again.',
         google_unavailable: 'Google sign-in is not available right now.',
         google_email: 'Your Google account email is not verified, so we could not sign you in.',
-        signups_full: 'OpenBook is at capacity for now, so new sign-ups are paused.',
+        signups_full: 'Nexora is at capacity for now, so new sign-ups are paused.',
         email_exists: 'An account with this email already exists. Log in with your password, then connect Google from Settings.',
         connect_failed: 'Could not connect your Google account. Please log in and try again from Settings.',
       };

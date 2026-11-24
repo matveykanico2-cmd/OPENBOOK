@@ -1,6 +1,6 @@
-# OpenBook
+# Nexora
 
-**An open-source social network where your data is yours.** OpenBook fuses the
+**An open-source social network where your data is yours.** Nexora fuses the
 **Facebook** side (profiles, a personal feed, photos, reactions, real-time chat,
 stories, Reels) with the **Reddit** side (communities, threaded comments, up and
 down voting, karma), and it is built on one idea most platforms get wrong:
@@ -8,20 +8,20 @@ down voting, karma), and it is built on one idea most platforms get wrong:
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-blue.svg)](LICENSE)
 ![Node](https://img.shields.io/badge/Node-24%2B-339933?logo=node.js&logoColor=white)
-[![Live demo](https://img.shields.io/badge/demo-openbook--w8gi.onrender.com-4f46e5)](https://openbook-w8gi.onrender.com)
+[![Live demo](https://img.shields.io/badge/demo-nexora.shalter.ru-1877f2)](https://nexora.shalter.ru)
 
-> **Live demo:** https://openbook.space
+> **Live demo:** https://nexora.shalter.ru
 
-> OpenBook is an independent open-source project. It is not affiliated with,
+> Nexora is an independent open-source project. It is not affiliated with,
 > endorsed by, or connected to Meta, Facebook, or Reddit.
 
 ---
 
-## Why OpenBook is different
+## Why Nexora is different
 
 Most social platforms tie one number to everything: it decides both how popular
 you are and whether you get silenced. That is why unpopular opinions get buried
-and spammers slip through. OpenBook splits those signals apart:
+and spammers slip through. Nexora splits those signals apart:
 
 - **Karma** is your social score. Up and down votes move it. It only affects
   where your content ranks. It can go negative and it **never** hides you.
@@ -121,13 +121,13 @@ in production:
 | `FOUNDER_EMAILS` | Comma-separated emails that get the cosmetic Founder badge |
 | `DATA_DIR` | Folder for the local-file database + upload staging (only needed in `local` mode; defaults to the app folder) |
 | `RESEND_API_KEY` | Enables email verification via [Resend](https://resend.com). When unset, signups are auto-verified so the app is never locked out |
-| `EMAIL_FROM` | Sender for verification emails, for example `OpenBook <noreply@yourdomain>` |
+| `EMAIL_FROM` | Sender for verification emails, for example `Nexora <noreply@yourdomain>` |
 | `PORT` | Port to listen on (default 3000) |
 | `SUPPORT_GITHUB`, `SUPPORT_OPENCOLLECTIVE`, `SUPPORT_CRYPTO` | Links shown on the in-app Support page |
 
 ## Deployment
 
-OpenBook runs as an always-on Node process (it uses WebSockets), so it does not
+Nexora runs as an always-on Node process (it uses WebSockets), so it does not
 run on static or serverless hosts. It does **not** need a local disk: point it
 at a networked database and object storage and the web service is stateless, so
 it deploys with **zero downtime**.
@@ -184,9 +184,9 @@ Passwords are stored only as bcrypt hashes, and sessions expire after 30 days.
 
 ## License
 
-[AGPL-3.0-or-later](LICENSE). If you run a modified version of OpenBook as a
+[AGPL-3.0-or-later](LICENSE). If you run a modified version of Nexora as a
 network service, you must make your source available to its users. This is the
-same license that protects Mastodon and Lemmy, and it keeps OpenBook and its
+same license that protects Mastodon and Lemmy, and it keeps Nexora and its
 forks open.
 
 ## Contributing
