@@ -52,6 +52,26 @@
   // Escape, linkify @mentions, then linkify URLs. Used for post + comment bodies.
   function richText(content) { return linkify(mentionify(esc(content))); }
 
+  const UI_TEXT = {
+    en: { home: 'Home', communities: 'Communities', marketplace: 'Marketplace', market: 'Market', dashboard: 'Dashboard', dark: 'Dark', light: 'Light', search: 'Search Nexora', translate: 'Translate', friends: 'Friends', groups: 'Groups', saved: 'Saved', invite: 'Invite friends', jury: 'Jury duty', suggestions: 'Suggestions', support: 'Support Nexora', logout: 'Log out', translator: 'Translator', translateSub: 'Translate text without leaving Nexora.', from: 'From', to: 'To', sourcePlaceholder: 'Paste or type text here...', outputPlaceholder: 'Translation will appear here', clear: 'Clear', translating: 'Translating...', ready: 'Translation ready' },
+    ru: { home: 'Главная', communities: 'Сообщества', marketplace: 'Маркет', market: 'Маркет', dashboard: 'Статистика', dark: 'Тёмная тема', light: 'Светлая тема', search: 'Поиск в Nexora', translate: 'Переводчик', friends: 'Друзья', groups: 'Группы', saved: 'Сохранённое', invite: 'Пригласить друзей', jury: 'Жюри', suggestions: 'Предложения', support: 'Поддержать Nexora', logout: 'Выйти', translator: 'Переводчик', translateSub: 'Переводите текст, не покидая Nexora.', from: 'С языка', to: 'На язык', sourcePlaceholder: 'Введите или вставьте текст...', outputPlaceholder: 'Здесь появится перевод', clear: 'Очистить', translating: 'Переводим...', ready: 'Перевод готов' }
+  };
+  let uiLocale = 'en';
+  function tx(key) { return (UI_TEXT[uiLocale] && UI_TEXT[uiLocale][key]) || UI_TEXT.en[key] || key; }
+  function setLocale(next) {
+    uiLocale = next === 'ru' ? 'ru' : 'en';
+    try { localStorage.setItem('nx_locale', uiLocale); } catch (e) {}
+    document.documentElement.setAttribute('lang', uiLocale);
+    document.querySelectorAll('[data-i18n]').forEach((node) => { const key = node.getAttribute('data-i18n'); node.textContent = tx(key); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => { node.placeholder = tx(node.getAttribute('data-i18n-placeholder')); });
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) { langBtn.textContent = uiLocale === 'ru' ? 'EN' : 'RU'; langBtn.title = uiLocale === 'ru' ? 'Switch to English' : 'Переключить на русский'; }
+    const translateBtn = document.getElementById('translateBtn');
+    if (translateBtn) translateBtn.title = tx('translate');
+    syncThemeBtn();
+  }
+  function toggleLocale() { setLocale(uiLocale === 'ru' ? 'en' : 'ru'); renderLeftRail(); }
+
   // Normalize legacy UI glyphs to the same outline icon system. User-authored
   // post/comment/message text is deliberately excluded so people's own emoji
   // remain part of their content.
@@ -259,6 +279,11 @@
     if (day < 7) return day + 'd';
     return d.toLocaleDateString();
   }
+  function formatBirthday(iso) {
+    if (!iso) return '';
+    const d = new Date(String(iso) + 'T00:00:00');
+    return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString(uiLocale === 'ru' ? 'ru-RU' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
 
   function toast(msg) {
     const t = el('<div class="toast"></div>');
@@ -297,12 +322,12 @@
     const target = langs.some((l) => l[0].toLowerCase() === browserLang) && browserLang !== 'auto' ? browserLang : 'en';
     const m = modal(
       '<div class="translator-modal-inner">' +
-        '<div class="translator-head"><div><h3 class="translator-title"><span class="ti icon-language" aria-hidden="true"></span> Translator</h3><p class="translator-sub">Translate text without leaving Nexora.</p></div></div>' +
+        '<div class="translator-head"><div><h3 class="translator-title"><span class="ti icon-language" aria-hidden="true"></span> ' + tx('translator') + '</h3><p class="translator-sub">' + tx('translateSub') + '</p></div></div>' +
         '<div class="translator-grid">' +
-          '<div class="translator-pane"><label for="trSourceLang">From</label><select class="input" id="trSourceLang">' + options('auto') + '</select><textarea class="input" id="trSource" placeholder="Paste or type text here..."></textarea></div>' +
-          '<div class="translator-pane"><label for="trTargetLang">To</label><select class="input" id="trTargetLang">' + options(target) + '</select><textarea class="input translator-output" id="trOutput" placeholder="Translation will appear here" readonly></textarea></div>' +
+          '<div class="translator-pane"><label for="trSourceLang">' + tx('from') + '</label><select class="input" id="trSourceLang">' + options('auto') + '</select><textarea class="input" id="trSource" placeholder="' + tx('sourcePlaceholder') + '"></textarea></div>' +
+          '<div class="translator-pane"><label for="trTargetLang">' + tx('to') + '</label><select class="input" id="trTargetLang">' + options(target) + '</select><textarea class="input translator-output" id="trOutput" placeholder="' + tx('outputPlaceholder') + '" readonly></textarea></div>' +
         '</div>' +
-        '<div class="translator-actions"><span class="translator-status" id="trStatus"></span><button class="btn btn-ghost btn-sm" type="button" id="trClear">Clear</button><button class="btn btn-primary" type="button" id="trTranslate"><span class="ti icon-language" aria-hidden="true"></span> Translate</button></div>' +
+        '<div class="translator-actions"><span class="translator-status" id="trStatus"></span><button class="btn btn-ghost btn-sm" type="button" id="trClear">' + tx('clear') + '</button><button class="btn btn-primary" type="button" id="trTranslate"><span class="ti icon-language" aria-hidden="true"></span> ' + tx('translate') + '</button></div>' +
       '</div>'
     );
     const source = m.q('#trSource');
@@ -314,7 +339,7 @@
       const to = m.q('#trTargetLang').value;
       if (!text) { status.textContent = 'Add some text first'; source.focus(); return; }
       if (from !== 'auto' && from === to) { output.value = text; status.textContent = 'The languages are the same'; return; }
-      status.textContent = 'Translating...';
+      status.textContent = tx('translating');
       output.value = '';
       try {
         const detected = /[іїєґ]/i.test(text) ? 'uk' : /[а-яё]/i.test(text) ? 'ru' : 'en';
@@ -326,7 +351,7 @@
         const translated = data && data.responseData && data.responseData.translatedText;
         if (!translated) throw new Error('No translation returned');
         output.value = translated;
-        status.textContent = 'Translation ready';
+        status.textContent = tx('ready');
       } catch (e) {
         status.textContent = e.message || 'Could not translate right now';
       }
@@ -655,6 +680,10 @@
     setupChromeAvatar();
     setupAccountMenu();
     installUiIconNormalizer();
+    try { uiLocale = localStorage.getItem('nx_locale') || 'ru'; } catch (e) { uiLocale = 'ru'; }
+    const langBtn = document.getElementById('langBtn');
+    if (langBtn) langBtn.addEventListener('click', toggleLocale);
+    setLocale(uiLocale);
 
     // Wire every nav target: top-bar logo + center tabs, the messages button,
     // and the mobile bottom-nav tabs (all carry data-nav).
@@ -826,15 +855,15 @@
       '<div class="card" style="padding:8px">' +
       '<div class="side-link" data-go="profile">' + avatar(ME, 32) + '<span>' + esc(ME.name) + '</span></div>' +
       (isOwner ? '<a class="side-link" href="/admin" style="text-decoration:none"><span class="ic icon-settings"></span><span>Admin</span></a>' : '') +
-      '<div class="side-link" id="getStartedLink"><span class="ic icon-rocket"></span><span>Get started</span></div>' +
-      '<div class="side-link" data-go="friends"><span class="ic icon-users"></span><span>Friends</span><span class="badge side-badge hidden" id="friendsBadge">0</span></div>' +
-      '<div class="side-link" data-go="groups"><span class="ic icon-globe"></span><span>Groups</span></div>' +
-      '<div class="side-link" data-go="saved"><span class="ic icon-bookmark"></span><span>Saved</span></div>' +
-      '<div class="side-link" data-go="invite"><span class="ic icon-gift"></span><span>Invite friends</span></div>' +
-      '<div class="side-link" data-go="jury"><span class="ic icon-scale"></span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
-      '<div class="side-link" data-go="suggestions"><span class="ic icon-lightbulb"></span><span>Suggest us</span></div>' +
-      '<div class="side-link" data-go="support"><span class="ic icon-heart"></span><span>Support Nexora</span></div>' +
-      '<div class="side-link" id="leftLogout"><span class="ic icon-logout"></span><span>Log out</span></div>' +
+      '<div class="side-link" id="getStartedLink"><span class="ic icon-rocket"></span><span>' + (uiLocale === 'ru' ? 'Начать работу' : 'Get started') + '</span></div>' +
+      '<div class="side-link" data-go="friends"><span class="ic icon-users"></span><span>' + tx('friends') + '</span><span class="badge side-badge hidden" id="friendsBadge">0</span></div>' +
+      '<div class="side-link" data-go="groups"><span class="ic icon-globe"></span><span>' + tx('groups') + '</span></div>' +
+      '<div class="side-link" data-go="saved"><span class="ic icon-bookmark"></span><span>' + tx('saved') + '</span></div>' +
+      '<div class="side-link" data-go="invite"><span class="ic icon-gift"></span><span>' + tx('invite') + '</span></div>' +
+      '<div class="side-link" data-go="jury"><span class="ic icon-scale"></span><span>' + tx('jury') + '</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
+      '<div class="side-link" data-go="suggestions"><span class="ic icon-lightbulb"></span><span>' + tx('suggestions') + '</span></div>' +
+      '<div class="side-link" data-go="support"><span class="ic icon-heart"></span><span>' + tx('support') + '</span></div>' +
+      '<div class="side-link" id="leftLogout"><span class="ic icon-logout"></span><span>' + tx('logout') + '</span></div>' +
       '</div>' +
       '<nav class="rail-foot">' +
       '<a href="/mission">Our Mission</a>' +
@@ -964,9 +993,9 @@
     const icon = document.getElementById('themeIcon');
     const label = document.getElementById('themeLabel');
     if (icon) icon.className = 'ti ' + (dark ? 'icon-sun' : 'icon-moon');
-    if (label) label.textContent = dark ? 'Light mode' : 'Dark';
-    btn.setAttribute('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
-    btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+    if (label) label.textContent = dark ? tx('light') : tx('dark');
+    btn.setAttribute('title', dark ? (uiLocale === 'ru' ? 'Включить светлую тему' : 'Switch to light mode') : (uiLocale === 'ru' ? 'Включить тёмную тему' : 'Switch to dark mode'));
+    btn.setAttribute('aria-label', btn.getAttribute('title'));
     if (!btn._wired) { btn._wired = true; btn.addEventListener('click', toggleTheme); }
   }
 
@@ -3064,6 +3093,7 @@
       '<div class="phead-id"><div class="pname"' + (_nameAccent ? ' style="--name-accent:' + esc(_nameAccent) + '"' : '') + '>' + esc(u.name) + verifTick(u) + ' ' + badgeChip(u) + '</div>' +
       (u.username ? '<div class="pmeta" style="color:var(--text-soft);font-weight:600">@' + esc(u.username) + '</div>' : '') +
       '<div class="pmeta">' + data.friendsCount + ' friends &#183; ' + (data.followersCount || 0) + ' followers &#183; ' + data.postsCount + ' posts &#183; &#9650; ' + (u.karma || 0) + ' karma</div>' +
+      (u.birthday ? '<div class="pmeta profile-birthday"><span class="ti icon-calendar" aria-hidden="true"></span> ' + esc(formatBirthday(u.birthday)) + '</div>' : '') +
       (data.nameHistory && data.nameHistory.length
         ? '<div class="pmeta" style="font-size:12px">Previously known as: ' + data.nameHistory.map((h) => esc(h.name)).join(', ') + '</div>'
         : '') +
@@ -3265,6 +3295,7 @@
       '<div class="shint" id="epUserMsg" style="font-size:12px">Your unique @handle: 3 to 20 characters, letters, numbers, or underscore.</div></div>' +
       '<div class="field"><label>Bio</label><textarea class="input" id="epBio" rows="3" maxlength="300" placeholder="Tell people about yourself">' + esc(ME.bio || '') + '</textarea>' +
       '<div class="shint" style="font-size:12px;display:flex;justify-content:space-between;gap:10px"><span>Links become clickable on <strong>Plus</strong> and above (or for long-standing trusted accounts).</span><span id="epBioCount" style="white-space:nowrap;color:var(--text-soft)"></span></div></div>' +
+      '<div class="field"><label>Birthday</label><input class="input" id="epBirthday" type="date" value="' + esc(ME.birthday || '') + '"><div class="shint" style="font-size:12px">Shown on your profile. You can leave it blank.</div></div>' +
       ((ME.tier >= 1)
         ? ('<div class="field"><label>Name color</label>' +
             '<div class="row" style="gap:10px;align-items:center">' +
@@ -3370,12 +3401,13 @@
     m.q('#epSave').onclick = async () => {
       const name = m.q('#epName').value.trim();
       const bio = m.q('#epBio').value.trim();
+      const birthday = m.q('#epBirthday') ? m.q('#epBirthday').value : '';
       if (!name) { toast('Name cannot be empty'); return; }
       try {
         const accentArg = (ME.tier >= 1) ? _accent : undefined; // only paid tiers/founder send it
         const userArg = _userEl ? _userEl.value.trim() : undefined;
         const themeArg = (ME.tier >= 3) ? _theme : undefined; // only Premium/founder send it
-        ME = (await API.updateProfile(name, bio, accentArg, userArg, themeArg)).user;
+        ME = (await API.updateProfile(name, bio, accentArg, userArg, themeArg, birthday)).user;
         m.close();
         toast('Profile saved');
         setupChromeAvatar();

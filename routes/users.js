@@ -191,6 +191,10 @@ router.get('/me/username-available', requireAuth, async (req, res) => {
 router.put('/me', requireAuth, async (req, res) => {
   const name = (req.body.name || '').trim();
   const bio = (req.body.bio || '').trim().slice(0, 300); // bios are capped at 300 characters
+  const birthday = String(req.body.birthday || '').trim();
+  if (birthday && !/^\d{4}-\d{2}-\d{2}$/.test(birthday)) return res.status(400).json({ error: 'Birthday must be a valid date.' });
+  if (birthday && Number.isNaN(Date.parse(birthday))) return res.status(400).json({ error: 'Birthday must be a valid date.' });
+  if (birthday && new Date(birthday + 'T00:00:00Z') > new Date()) return res.status(400).json({ error: 'Birthday cannot be in the future.' });
   if (!name) return res.status(400).json({ error: 'Your name cannot be empty' });
 
   // Validate the @username up front (if provided) so an invalid/taken handle does
@@ -229,9 +233,9 @@ router.put('/me', requireAuth, async (req, res) => {
       });
     }
     await db.prepare('INSERT INTO name_history (user_id, old_name) VALUES (?, ?)').run(req.user.id, cur.name);
-    await db.prepare('UPDATE users SET name = ?, bio = ? WHERE id = ?').run(name, bio, req.user.id);
+    await db.prepare('UPDATE users SET name = ?, bio = ?, birthday = ? WHERE id = ?').run(name, bio, birthday, req.user.id);
   } else {
-    await db.prepare('UPDATE users SET bio = ? WHERE id = ?').run(bio, req.user.id);
+    await db.prepare('UPDATE users SET bio = ?, birthday = ? WHERE id = ?').run(bio, birthday, req.user.id);
   }
 
   // Profile accent color (a paid perk). Only updated when the field is present, so

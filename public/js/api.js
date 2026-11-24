@@ -87,7 +87,7 @@ const API = {
   listMutes() { return this.get('/api/relations/mutes'); },
   setMentionPref(pref) { return this.put('/api/relations/mention-pref', { pref }); },
   getProfile(id) { return this.get('/api/users/' + id); },
-  updateProfile(name, bio, accentColor, username, profileTheme) { return this.put('/api/users/me', { name, bio, accentColor, username, profileTheme }); },
+  updateProfile(name, bio, accentColor, username, profileTheme, birthday) { return this.put('/api/users/me', { name, bio, accentColor, username, profileTheme, birthday }); },
   setVisibility(visibility) { return this.put('/api/users/me/visibility', { visibility }); },
   checkUsername(u) { return this.get('/api/users/me/username-available?u=' + encodeURIComponent(u)); },
   myStats() { return this.get('/api/users/me/stats'); },

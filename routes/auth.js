@@ -115,6 +115,7 @@ function selfUser(u) {
   return Object.assign(publicUser(u), {
     email: u.email,
     phone: u.phone || '',
+    birthday: u.birthday || '',
     emailVerified: !!u.email_verified,
     isAdmin: !!u.is_admin,
     googleLinked: !!u.google_id, // whether a Google account is connected

@@ -25,26 +25,27 @@
         <span class="brand name">Nexora</span>
       </div>
       <div class="search">
-        <input type="text" id="searchInput" placeholder="Search Nexora" autocomplete="off" />
+        <input type="text" id="searchInput" data-i18n-placeholder="search" placeholder="Search Nexora" autocomplete="off" />
       </div>
     </div>
     <nav class="nav-primary">
-      <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl">Home</span></button>
-      <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl">Communities</span></button>
-      <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl">Marketplace</span></button>
-      <button class="nav-tab" data-nav="dashboard" title="Professional dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl">Dashboard</span></button>
+      <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl" data-i18n="home">Home</span></button>
+      <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl" data-i18n="communities">Communities</span></button>
+      <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl" data-i18n="marketplace">Marketplace</span></button>
+      <button class="nav-tab" data-nav="dashboard" title="Professional dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl" data-i18n="dashboard">Dashboard</span></button>
     </nav>
     <div class="topbar-right">
+      <button class="nav-btn lang-btn" id="langBtn" title="Change interface language" aria-label="Change interface language">RU</button>
       <button class="nav-btn translate-btn" id="translateBtn" title="Open translator" aria-label="Open translator">
         <span class="ti icon-language" aria-hidden="true"></span><span class="tl">Translate</span>
       </button>
       <button class="nav-btn theme-btn" id="themeBtn" title="Toggle light / dark mode" aria-label="Toggle light / dark mode">
-        <span class="ti icon-moon" id="themeIcon" aria-hidden="true"></span><span class="tl" id="themeLabel">Dark</span>
+        <span class="ti icon-moon" id="themeIcon" aria-hidden="true"></span><span class="tl" id="themeLabel" data-i18n="dark">Dark</span>
       </button>
-      <button class="nav-btn" data-nav="messages" title="Messages">
+      <button class="nav-btn" data-nav="messages" title="Messages" aria-label="Messages">
         <span class="ti icon-message" aria-hidden="true"></span><span class="badge hidden" id="messagesBadge">0</span>
       </button>
-      <button class="nav-btn" id="notifBtn" title="Notifications">
+      <button class="nav-btn" id="notifBtn" title="Notifications" aria-label="Notifications">
         <span class="ti icon-bell" aria-hidden="true"></span><span class="badge hidden" id="notifBadge">0</span>
       </button>
       <button class="nav-btn account-trigger" id="meBtn" title="Account menu" aria-label="Open account menu" aria-expanded="false"></button>
@@ -76,10 +77,10 @@
 
   <!-- Mobile-only bottom navigation (the primary destinations). -->
   <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl">Home</span></button>
-    <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl">Communities</span></button>
-    <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl">Market</span></button>
-    <button class="nav-tab" data-nav="dashboard" title="Dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl">Dashboard</span></button>
+    <button class="nav-tab" data-nav="feed" title="Home"><span class="ti icon-home" aria-hidden="true"></span><span class="tl" data-i18n="home">Home</span></button>
+    <button class="nav-tab" data-nav="communities" title="Communities"><span class="ti icon-users" aria-hidden="true"></span><span class="tl" data-i18n="communities">Communities</span></button>
+    <button class="nav-tab" data-nav="marketplace" title="Marketplace"><span class="ti icon-bag" aria-hidden="true"></span><span class="tl" data-i18n="market">Market</span></button>
+    <button class="nav-tab" data-nav="dashboard" title="Dashboard"><span class="ti icon-chart" aria-hidden="true"></span><span class="tl" data-i18n="dashboard">Dashboard</span></button>
   </nav>
 
   <!-- Mount points for modals, toasts, story viewer -->

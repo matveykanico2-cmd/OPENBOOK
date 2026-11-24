@@ -489,6 +489,7 @@ db.init = async function init() {
   // Optional migration for the signup phone field. Existing accounts keep an
   // empty value; new accounts receive the normalized number from auth/signup.
   await addColumn('users', "phone TEXT NOT NULL DEFAULT ''", 'phone');
+  await addColumn('users', "birthday TEXT NOT NULL DEFAULT ''", 'birthday');
 
   // --- Password reset (forgot password) ---
   // A one-time token + expiry, set when a reset is requested and cleared once the
@@ -917,7 +918,7 @@ db.init = async function init() {
     CREATE INDEX IF NOT EXISTS idx_roadmap_events_sug ON roadmap_events(suggestion_id);
   `);
 
-  // Platform admins are designated by the ADMIN_EMAILS env var (comma separated).
+  // Platform admins are designated by ADMIN_EMAILS and/or ADMIN_PHONES.
   // The sync is two-way: when the list is set, clear all admin flags first and then
   // re-grant, so removing an email from the list actually demotes that user. (When
   // the env var is unset we leave existing flags untouched.)
@@ -926,10 +927,20 @@ db.init = async function init() {
       .split(',')
       .map((s) => s.trim().toLowerCase())
       .filter(Boolean);
-    if (adminEmails.length) {
-      const ph = adminEmails.map(() => '?').join(',');
+    const adminPhones = (process.env.ADMIN_PHONES || '')
+      .split(',')
+      .map((s) => s.trim().replace(/[^\d+]/g, ''))
+      .filter(Boolean);
+    if (adminEmails.length || adminPhones.length) {
       await db.exec('UPDATE users SET is_admin = 0');
-      await db.prepare('UPDATE users SET is_admin = 1 WHERE lower(email) IN (' + ph + ')').run(...adminEmails);
+      if (adminEmails.length) {
+        const ph = adminEmails.map(() => '?').join(',');
+        await db.prepare('UPDATE users SET is_admin = 1 WHERE lower(email) IN (' + ph + ')').run(...adminEmails);
+      }
+      if (adminPhones.length) {
+        const ph = adminPhones.map(() => '?').join(',');
+        await db.prepare('UPDATE users SET is_admin = 1 WHERE phone IN (' + ph + ')').run(...adminPhones);
+      }
     }
   } catch (e) { /* users table or column may not be ready on a brand new db */ }
 

@@ -10,6 +10,7 @@ services:
       DATA_DIR: /app/data
       APP_BASE_URL: ${APP_BASE_URL:?set APP_BASE_URL}
       ADMIN_EMAILS: ${ADMIN_EMAILS:-}
+      ADMIN_PHONES: ${ADMIN_PHONES:-+79781827502}
     volumes:
       - openbook-data:/app/data
     ports:
