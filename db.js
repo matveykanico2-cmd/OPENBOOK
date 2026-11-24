@@ -519,8 +519,8 @@ db.init = async function init() {
   // them from the backfill). No-ops cleanly if those sentinel rows do not exist yet.
   try {
     await db.prepare(
-      "UPDATE users SET is_official = 1, welcomed = 1, username = 'openbook', " +
-      "bio = 'The official OpenBook account. Follow for new features, fixes, and announcements, posted in the open. This is an automated account and does not read replies.' " +
+      "UPDATE users SET is_official = 1, welcomed = 1, username = 'nexora', " +
+      "bio = 'The official Nexora account. Follow for new features, fixes, and announcements, posted in the open. This is an automated account and does not read replies.' " +
       "WHERE email = 'system@openbook.local'"
     ).run();
   } catch (e) {}

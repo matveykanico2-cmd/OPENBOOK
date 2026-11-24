@@ -170,7 +170,7 @@ router.get('/official', requireAuth, async (req, res) => {
 const THEME_IDS = new Set(['midnight', 'sunset', 'ocean', 'forest', 'rose', 'gold', 'aurora', 'graphite']);
 
 const USERNAME_RE = /^[a-zA-Z][a-zA-Z0-9_]{2,19}$/;
-const RESERVED_USERNAMES = new Set(['admin', 'administrator', 'openbook', 'support', 'system', 'root', 'help', 'about', 'mod', 'moderator', 'official', 'staff', 'deleted', 'ghost', 'founder', 'me', 'api', 'null', 'undefined']);
+const RESERVED_USERNAMES = new Set(['admin', 'administrator', 'openbook', 'nexora', 'support', 'system', 'root', 'help', 'about', 'mod', 'moderator', 'official', 'staff', 'deleted', 'ghost', 'founder', 'me', 'api', 'null', 'undefined']);
 function usernameError(name) {
   if (!USERNAME_RE.test(name)) return 'Usernames are 3 to 20 characters, start with a letter, and use only letters, numbers, or underscores.';
   if (RESERVED_USERNAMES.has(name.toLowerCase())) return 'That username is reserved. Please choose another.';

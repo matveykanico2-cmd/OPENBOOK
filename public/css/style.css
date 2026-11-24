@@ -125,6 +125,19 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 .icon-close { mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 6 12 12M18 6 6 18'/%3E%3C/svg%3E"); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 6 12 12M18 6 6 18'/%3E%3C/svg%3E"); }
 .icon-star { mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z'/%3E%3C/svg%3E"); -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 3 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.6l6.2-.9L12 3Z'/%3E%3C/svg%3E"); }
 .ui-glyph { vertical-align: -0.18em; width: 1em; height: 1em; margin-right: .28em; }
+.ui-glyph + .ui-glyph { margin-left: .12em; }
+.field { margin-bottom: 16px; }
+.section-title { margin-bottom: 14px; }
+#view > .card, #view > .messenger { margin-bottom: 20px; }
+.card + .card { margin-top: 12px; }
+.mk-head, .phead-row, .comm-act, .pactions, .sug-admin, .modal .mh, .modal .mc { gap: 10px; }
+.post-actions { gap: 6px; }
+.post-action { padding-inline: 10px; }
+.empty { padding: 24px 16px; }
+.topbar-right { gap: 6px; }
+.account-menu, .dropdown { padding: 10px; }
+.account-menu-item { min-height: 42px; }
+.modal { padding: 20px; }
 
 /* ---------- Buttons ---------- */
 .btn {
