@@ -45,7 +45,7 @@
 
   <script>
     (function () {
-      var ICONS = { auto_hide: '👁️', remove_post: '🚫', remove_comment: '🚫', restore_post: '↩️', restore_comment: '↩️', ban: '⛔', unban: '✅', lock: '🔒', unlock: '🔓', pin: '📌', account_deleted: '🗑️', jury_verdict: '⚖️', jury_opened: '⚖️', announce: '📌', unannounce: '📌' };
+      var ICONS = { auto_hide: '<span class="ti icon-eye"></span>', remove_post: '<span class="ti icon-ban"></span>', remove_comment: '<span class="ti icon-ban"></span>', restore_post: '<span class="ti icon-rotate"></span>', restore_comment: '<span class="ti icon-rotate"></span>', ban: '<span class="ti icon-ban"></span>', unban: '<span class="ti icon-check"></span>', lock: '<span class="ti icon-lock"></span>', unlock: '<span class="ti icon-unlock"></span>', pin: '<span class="ti icon-pin"></span>', account_deleted: '<span class="ti icon-trash"></span>', jury_verdict: '<span class="ti icon-scale"></span>', jury_opened: '<span class="ti icon-scale"></span>', announce: '<span class="ti icon-pin"></span>', unannounce: '<span class="ti icon-pin"></span>' };
       var LABELS = { auto_hide: 'Auto-hidden by community flags', remove_post: 'Post removed', remove_comment: 'Comment removed', restore_post: 'Post restored', restore_comment: 'Comment restored', ban: 'User banned from community', unban: 'User unbanned', lock: 'Thread locked', unlock: 'Thread unlocked', pin: 'Post pinned', account_deleted: 'Account deleted', jury_verdict: 'Community jury verdict', jury_opened: 'Community jury convened', announce: 'Pinned a site announcement', unannounce: 'Removed a site announcement' };
       function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
       function when(ts) {
@@ -55,7 +55,7 @@
         return d.toLocaleString();
       }
       function row(e) {
-        var icon = ICONS[e.action] || '📝';
+        var icon = ICONS[e.action] || '<span class="ti icon-edit"></span>';
         var label = LABELS[e.action] || e.action;
         var actor = e.actor ? esc(e.actor.name) : 'OpenBook';
         var tag = e.targetType ? '<span class="ml-tag">' + esc(e.targetType) + (e.targetId ? ' #' + esc(e.targetId) : '') + '</span>' : '';

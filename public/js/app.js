@@ -245,6 +245,60 @@
     return { node: back, close: close, q: (sel) => back.querySelector(sel) };
   }
 
+  // Small, built-in translator for posts, messages and copied text. It uses the
+  // public MyMemory endpoint, keeps the UI inside OpenBook, and degrades cleanly
+  // with a useful error when the translation service is unavailable.
+  function openTranslator() {
+    const langs = [
+      ['auto', 'Detect language'], ['en', 'English'], ['ru', 'Russian'],
+      ['uk', 'Ukrainian'], ['de', 'German'], ['fr', 'French'],
+      ['es', 'Spanish'], ['tr', 'Turkish'], ['zh-CN', 'Chinese']
+    ];
+    const options = (selected) => langs.map((l) => '<option value="' + l[0] + '"' + (l[0] === selected ? ' selected' : '') + '>' + l[1] + '</option>').join('');
+    const browserLang = (navigator.language || 'en').toLowerCase().split('-')[0];
+    const target = langs.some((l) => l[0].toLowerCase() === browserLang) && browserLang !== 'auto' ? browserLang : 'en';
+    const m = modal(
+      '<div class="translator-modal-inner">' +
+        '<div class="translator-head"><div><h3 class="translator-title"><span class="ti icon-language" aria-hidden="true"></span> Translator</h3><p class="translator-sub">Translate text without leaving OpenBook.</p></div></div>' +
+        '<div class="translator-grid">' +
+          '<div class="translator-pane"><label for="trSourceLang">From</label><select class="input" id="trSourceLang">' + options('auto') + '</select><textarea class="input" id="trSource" placeholder="Paste or type text here..."></textarea></div>' +
+          '<div class="translator-pane"><label for="trTargetLang">To</label><select class="input" id="trTargetLang">' + options(target) + '</select><textarea class="input translator-output" id="trOutput" placeholder="Translation will appear here" readonly></textarea></div>' +
+        '</div>' +
+        '<div class="translator-actions"><span class="translator-status" id="trStatus"></span><button class="btn btn-ghost btn-sm" type="button" id="trClear">Clear</button><button class="btn btn-primary" type="button" id="trTranslate"><span class="ti icon-language" aria-hidden="true"></span> Translate</button></div>' +
+      '</div>'
+    );
+    const source = m.q('#trSource');
+    const output = m.q('#trOutput');
+    const status = m.q('#trStatus');
+    const translate = async () => {
+      const text = source.value.trim();
+      const from = m.q('#trSourceLang').value;
+      const to = m.q('#trTargetLang').value;
+      if (!text) { status.textContent = 'Add some text first'; source.focus(); return; }
+      if (from !== 'auto' && from === to) { output.value = text; status.textContent = 'The languages are the same'; return; }
+      status.textContent = 'Translating...';
+      output.value = '';
+      try {
+        const detected = /[іїєґ]/i.test(text) ? 'uk' : /[а-яё]/i.test(text) ? 'ru' : 'en';
+        const pair = (from === 'auto' ? detected : from) + '|' + to;
+        const url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text.slice(0, 5000)) + '&langpair=' + encodeURIComponent(pair);
+        const res = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!res.ok) throw new Error('Translation service is unavailable');
+        const data = await res.json();
+        const translated = data && data.responseData && data.responseData.translatedText;
+        if (!translated) throw new Error('No translation returned');
+        output.value = translated;
+        status.textContent = 'Translation ready';
+      } catch (e) {
+        status.textContent = e.message || 'Could not translate right now';
+      }
+    };
+    m.q('#trTranslate').addEventListener('click', translate);
+    m.q('#trClear').addEventListener('click', () => { source.value = ''; output.value = ''; status.textContent = ''; source.focus(); });
+    source.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') translate(); });
+    setTimeout(() => source.focus(), 0);
+  }
+
   // Share a link via the device's native share sheet (mobile, and some desktops),
   // falling back to copying it to the clipboard so it always works.
   function shareLink(url, title) {
@@ -568,6 +622,8 @@
     document.querySelectorAll('.topbar [data-nav], .bottom-nav [data-nav]').forEach((b) => {
       b.addEventListener('click', () => go(b.getAttribute('data-nav')));
     });
+    const translateBtn = document.getElementById('translateBtn');
+    if (translateBtn) translateBtn.addEventListener('click', openTranslator);
     document.getElementById('notifBtn').addEventListener('click', toggleNotifs);
     syncThemeBtn(); // the dark-mode toggle now lives on the top bar
 
@@ -730,16 +786,16 @@
     rail.innerHTML =
       '<div class="card" style="padding:8px">' +
       '<div class="side-link" data-go="profile">' + avatar(ME, 32) + '<span>' + esc(ME.name) + '</span></div>' +
-      (isOwner ? '<a class="side-link" href="/admin" style="text-decoration:none"><span class="ic">&#9881;&#65039;</span><span>Admin</span></a>' : '') +
-      '<div class="side-link" id="getStartedLink"><span class="ic">&#128640;</span><span>Get started</span></div>' +
-      '<div class="side-link" data-go="friends"><span class="ic">&#128101;</span><span>Friends</span><span class="badge side-badge hidden" id="friendsBadge">0</span></div>' +
-      '<div class="side-link" data-go="groups"><span class="ic">&#127760;</span><span>Groups</span></div>' +
-      '<div class="side-link" data-go="saved"><span class="ic">&#128278;</span><span>Saved</span></div>' +
-      '<div class="side-link" data-go="invite"><span class="ic">&#127881;</span><span>Invite friends</span></div>' +
-      '<div class="side-link" data-go="jury"><span class="ic">&#9878;&#65039;</span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
-      '<div class="side-link" data-go="suggestions"><span class="ic">&#128161;</span><span>Suggest us</span></div>' +
-      '<div class="side-link" data-go="support"><span class="ic">&#10084;&#65039;</span><span>Support OpenBook</span></div>' +
-      '<div class="side-link" id="leftLogout"><span class="ic">&#128682;</span><span>Log out</span></div>' +
+      (isOwner ? '<a class="side-link" href="/admin" style="text-decoration:none"><span class="ic icon-settings"></span><span>Admin</span></a>' : '') +
+      '<div class="side-link" id="getStartedLink"><span class="ic icon-rocket"></span><span>Get started</span></div>' +
+      '<div class="side-link" data-go="friends"><span class="ic icon-users"></span><span>Friends</span><span class="badge side-badge hidden" id="friendsBadge">0</span></div>' +
+      '<div class="side-link" data-go="groups"><span class="ic icon-globe"></span><span>Groups</span></div>' +
+      '<div class="side-link" data-go="saved"><span class="ic icon-bookmark"></span><span>Saved</span></div>' +
+      '<div class="side-link" data-go="invite"><span class="ic icon-gift"></span><span>Invite friends</span></div>' +
+      '<div class="side-link" data-go="jury"><span class="ic icon-scale"></span><span>Jury duty</span><span class="badge side-badge hidden" id="juryBadge">0</span></div>' +
+      '<div class="side-link" data-go="suggestions"><span class="ic icon-lightbulb"></span><span>Suggest us</span></div>' +
+      '<div class="side-link" data-go="support"><span class="ic icon-heart"></span><span>Support OpenBook</span></div>' +
+      '<div class="side-link" id="leftLogout"><span class="ic icon-logout"></span><span>Log out</span></div>' +
       '</div>' +
       '<nav class="rail-foot">' +
       '<a href="/mission">Our Mission</a>' +
@@ -770,23 +826,23 @@
   // from the "Get started" rail entry and reusable anywhere.
   function openGetStartedGuide() {
     const sections = [
-      { ic: '&#129534;', name: 'Claim your @username', desc: 'Lock in your handle before someone else takes it.', act: () => { go('profile', ME.id); whenReady('editProfileBtn', (b) => b.click()); } },
-      { ic: '&#128221;', name: 'Make your first post', desc: 'Share something. People vote it up and you start earning karma.', act: () => { go('feed'); whenReady('composerText', (t) => { t.focus(); t.scrollIntoView({ block: 'center' }); }); } },
-      { ic: '&#127968;', name: 'Home feed', desc: 'Posts from friends, people you follow, and the communities you join.', act: () => go('feed') },
-      { ic: '&#128227;', name: 'Communities', desc: 'Topic spaces you can join, post in, and vote on, a bit like subreddits.', act: () => go('communities') },
-      { ic: '&#128722;', name: 'Marketplace', desc: 'Buy and sell with other members.', act: () => go('marketplace') },
-      { ic: '&#128172;', name: 'Messages', desc: 'Private one to one chats. You can edit or delete anything you send.', act: () => go('messages') },
-      { ic: '&#128161;', name: 'Suggestions', desc: 'Propose ideas and vote. The most-wanted get built first, in the open.', act: () => go('suggestions') },
-      { ic: '&#127881;', name: 'Invite friends', desc: 'Every 5 friends who join unlock Premium for you.', act: () => go('invite') },
-      { ic: '&#128202;', name: 'Dashboard', desc: 'Your karma, account standing, and post analytics, fully transparent.', act: () => go('dashboard') },
-      { ic: '&#10084;&#65039;', name: 'Support OpenBook', desc: 'Optional. Keeps us ad-free and independent. Money never buys reach.', act: () => go('support') },
+      { ic: 'icon-user', name: 'Claim your @username', desc: 'Lock in your handle before someone else takes it.', act: () => { go('profile', ME.id); whenReady('editProfileBtn', (b) => b.click()); } },
+      { ic: 'icon-edit', name: 'Make your first post', desc: 'Share something. People vote it up and you start earning karma.', act: () => { go('feed'); whenReady('composerText', (t) => { t.focus(); t.scrollIntoView({ block: 'center' }); }); } },
+      { ic: 'icon-home', name: 'Home feed', desc: 'Posts from friends, people you follow, and the communities you join.', act: () => go('feed') },
+      { ic: 'icon-globe', name: 'Communities', desc: 'Topic spaces you can join, post in, and vote on, a bit like subreddits.', act: () => go('communities') },
+      { ic: 'icon-bag', name: 'Marketplace', desc: 'Buy and sell with other members.', act: () => go('marketplace') },
+      { ic: 'icon-message', name: 'Messages', desc: 'Private one to one chats. You can edit or delete anything you send.', act: () => go('messages') },
+      { ic: 'icon-lightbulb', name: 'Suggestions', desc: 'Propose ideas and vote. The most-wanted get built first, in the open.', act: () => go('suggestions') },
+      { ic: 'icon-gift', name: 'Invite friends', desc: 'Every 5 friends who join unlock Premium for you.', act: () => go('invite') },
+      { ic: 'icon-chart', name: 'Dashboard', desc: 'Your karma, account standing, and post analytics, fully transparent.', act: () => go('dashboard') },
+      { ic: 'icon-heart', name: 'Support OpenBook', desc: 'Optional. Keeps us ad-free and independent. Money never buys reach.', act: () => go('support') },
     ];
     const rows = sections.map((s, i) =>
-      '<button class="gs-row" data-i="' + i + '"><span class="gs-ic">' + s.ic + '</span>' +
+      '<button class="gs-row" data-i="' + i + '"><span class="gs-ic ti ' + s.ic + '" aria-hidden="true"></span>' +
       '<span class="gs-tx"><span class="gs-name">' + esc(s.name) + '</span><span class="gs-desc">' + esc(s.desc) + '</span></span>' +
       '<span class="gs-go">&#8250;</span></button>').join('');
     const m = modal(
-      '<div class="mh"><h3>&#128640; Get started on OpenBook</h3></div>' +
+      '<div class="mh"><h3><span class="ti icon-rocket" aria-hidden="true"></span> Get started on OpenBook</h3></div>' +
       '<div class="mc"><div class="shint" style="font-size:13px;margin-bottom:10px;line-height:1.5">Here is what each part of OpenBook is for. Tap any row to jump straight there.</div>' +
       '<div class="gs-list">' + rows + '</div></div>'
     );
@@ -868,7 +924,7 @@
     const dark = currentTheme() === 'dark';
     const icon = document.getElementById('themeIcon');
     const label = document.getElementById('themeLabel');
-    if (icon) icon.innerHTML = dark ? '&#9728;&#65039;' : '&#127769;'; // sun in dark mode, moon in light mode
+    if (icon) icon.className = 'ti ' + (dark ? 'icon-sun' : 'icon-moon');
     if (label) label.textContent = dark ? 'Light mode' : 'Dark';
     btn.setAttribute('title', dark ? 'Switch to light mode' : 'Switch to dark mode');
     btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
@@ -983,7 +1039,7 @@
     return '<div class="card welcome-banner" id="welcomeBanner">' +
       '<button class="welcome-x" id="welcomeClose" aria-label="Dismiss" title="Dismiss">&times;</button>' +
       '<div class="welcome-body">' +
-        '<span class="welcome-text"><span class="welcome-emoji">&#127793;</span> <strong>OpenBook just launched, and you&#39;re one of the first.</strong> Help shape it: explore every corner, then tell us what&#39;s broken or what to build next in the Suggestions box.</span>' +
+        '<span class="welcome-text"><span class="welcome-emoji ti icon-rocket" aria-hidden="true"></span> <strong>OpenBook just launched, and you&#39;re one of the first.</strong> Help shape it: explore every corner, then tell us what&#39;s broken or what to build next in the Suggestions box.</span>' +
         '<button class="btn btn-primary btn-sm welcome-cta" id="welcomeSuggest">Open Suggestions</button>' +
       '</div></div>';
   }
