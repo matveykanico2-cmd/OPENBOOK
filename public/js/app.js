@@ -52,6 +52,44 @@
   // Escape, linkify @mentions, then linkify URLs. Used for post + comment bodies.
   function richText(content) { return linkify(mentionify(esc(content))); }
 
+  // Normalize legacy UI glyphs to the same outline icon system. User-authored
+  // post/comment/message text is deliberately excluded so people's own emoji
+  // remain part of their content.
+  function installUiIconNormalizer() {
+    const glyphs = {
+      '🚀': 'icon-rocket', '👋': 'icon-user', '🏠': 'icon-home', '📣': 'icon-bell',
+      '📷': 'icon-edit', '📎': 'icon-link', '📊': 'icon-chart', '🎨': 'icon-edit',
+      '⚠️': 'icon-warning', '🌍': 'icon-globe', '👥': 'icon-users', '🔒': 'icon-lock',
+      '🔗': 'icon-link', '💬': 'icon-message', '📝': 'icon-edit', '🗑️': 'icon-trash',
+      '⚖️': 'icon-scale', '❤️': 'icon-heart', '🎁': 'icon-gift', '📌': 'icon-pin',
+      '🚫': 'icon-ban', '✅': 'icon-check', '❌': 'icon-close', '⛔': 'icon-ban',
+      '🔔': 'icon-bell', '🌙': 'icon-moon', '☀️': 'icon-sun', '⭐': 'icon-star'
+    };
+    const blocked = 'textarea,input,[contenteditable],.post-body,.comment,.bubble-msg,.msg-body,.chat-message,.story-text,.caption,.ptext';
+    function normalize(root) {
+      if (!root || root.nodeType !== 1) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let node;
+      while ((node = walker.nextNode())) {
+        if (node.parentElement && !node.parentElement.closest(blocked) && Object.keys(glyphs).some((g) => node.nodeValue.includes(g))) nodes.push(node);
+      }
+      nodes.forEach((textNode) => {
+        const parts = textNode.nodeValue.split(/(🚀|👋|🏠|📣|📷|📎|📊|🎨|⚠️|🌍|👥|🔒|🔗|💬|📝|🗑️|⚖️|❤️|🎁|📌|🚫|✅|❌|⛔|🔔|🌙|☀️|⭐)/u);
+        if (parts.length < 2) return;
+        const frag = document.createDocumentFragment();
+        parts.forEach((part) => {
+          if (glyphs[part]) { const icon = document.createElement('span'); icon.className = 'ti ui-glyph ' + glyphs[part]; icon.setAttribute('aria-hidden', 'true'); frag.appendChild(icon); }
+          else frag.appendChild(document.createTextNode(part));
+        });
+        textNode.parentNode.replaceChild(frag, textNode);
+      });
+    }
+    normalize(document.body);
+    const observer = new MutationObserver((records) => records.forEach((record) => record.addedNodes.forEach((n) => { if (n.nodeType === 1) normalize(n); })));
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
   // Only let http(s) URLs become a real href. Anything else (javascript:, data:,
   // etc.) collapses to '#', so a hostile link-post URL cannot run script when
   // clicked. The visible link text still shows the raw URL via esc().
@@ -616,6 +654,7 @@
   function setupChrome() {
     setupChromeAvatar();
     setupAccountMenu();
+    installUiIconNormalizer();
 
     // Wire every nav target: top-bar logo + center tabs, the messages button,
     // and the mobile bottom-nav tabs (all carry data-nav).
